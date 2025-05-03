@@ -49,12 +49,14 @@ class TextLinkButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
   final Color textColor;
+  final TextStyle? textStyle;
 
   const TextLinkButton({
     Key? key,
     required this.text,
     required this.onPressed,
-    this.textColor = Colors.white,
+    this.textColor = const Color(MyColor.pr5),
+    this.textStyle,
   }) : super(key: key);
 
   @override
@@ -67,7 +69,7 @@ class TextLinkButton extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400).merge(textStyle)
       ),
     );
   }

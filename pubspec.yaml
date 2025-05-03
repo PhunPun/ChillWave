@@ -75,6 +75,7 @@ flutter:
     - lib/assets/logo.png
     - lib/assets/icons/email.png
     - lib/assets/icons/google.png
+    - lib/assets/images/login_top.png
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

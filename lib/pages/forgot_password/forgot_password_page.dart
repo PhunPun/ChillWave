@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'screens/email_screen.dart';
 import 'screens/verification_screen.dart';
 import 'screens/new_password_screen.dart';
-import 'package:go_router/go_router.dart';
 import '../../themes/colors/colors.dart';
+import '../../apps/router/router_name.dart';
 
 enum ForgotPasswordStep {
   email,
@@ -44,7 +45,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   }
   
   void _handlePasswordSubmit(String password, String confirmPassword) {
-
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Password successfully changed!'),
@@ -53,7 +53,28 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     );
     
     // Navigate back to login page
-    context.go('/login');
+    context.goNamed(RouterName.login);
+  }
+  
+  void _handleBackButtonPressed() {
+    switch (_currentStep) {
+      case ForgotPasswordStep.email:
+        // Navigate back to login page
+        context.goNamed(RouterName.login);
+        break;
+      case ForgotPasswordStep.verification:
+        // Go back to email step
+        setState(() {
+          _currentStep = ForgotPasswordStep.email;
+        });
+        break;
+      case ForgotPasswordStep.newPassword:
+        // Go back to verification step
+        setState(() {
+          _currentStep = ForgotPasswordStep.verification;
+        });
+        break;
+    }
   }
   
   @override
@@ -77,26 +98,15 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           
           // Back Button
           Positioned(
-            top: 50,
+            top: 70,
             left: 16,
             child: IconButton(
               icon: const Icon(
                 Icons.arrow_back,
-                color: Colors.white,
+                color: Color(MyColor.black),
+                size: 32,
               ),
-              onPressed: () {
-                if (_currentStep == ForgotPasswordStep.email) {
-                  context.go('/login');
-                } else if (_currentStep == ForgotPasswordStep.verification) {
-                  setState(() {
-                    _currentStep = ForgotPasswordStep.email;
-                  });
-                } else if (_currentStep == ForgotPasswordStep.newPassword) {
-                  setState(() {
-                    _currentStep = ForgotPasswordStep.verification;
-                  });
-                }
-              },
+              onPressed: _handleBackButtonPressed,
             ),
           ),
 

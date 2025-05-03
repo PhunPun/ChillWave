@@ -32,14 +32,14 @@ class _EmailScreenState extends State<EmailScreen> {
           children: [
             const SizedBox(height: 30),
             
-            // Logo Container - positioned at top right
+            // Logo Container
             Align(
               alignment: Alignment.topRight,
               child: Container(
-                width: 80, // Slightly larger
-                height: 80, // Slightly larger
+                width: 80, 
+                height: 80, 
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha:0.8),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: ClipRRect(
@@ -58,7 +58,7 @@ class _EmailScreenState extends State<EmailScreen> {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Color(MyColor.pr6), // Darker pink color for title
+                  color: Color(MyColor.pr6),
                   fontFamily: 'RobotoSlab',
                 ),
               ),
@@ -83,26 +83,25 @@ class _EmailScreenState extends State<EmailScreen> {
                   widget.onContinue(_emailController.text);
                 }
               },
-              backgroundColor: const Color(MyColor.pr5), // Use the correct pink color
+              backgroundColor: const Color(MyColor.pr5), 
             ),
 
             const SizedBox(height: 20),
-
-            // Try Another Way link aligned to the right
             Align(
               alignment: Alignment.centerRight,
               child: TextLinkButton(
                 text: 'Try anotherway ?',
                 onPressed: () {
-                  // Handle try another way action
                 },
-                textColor: Colors.white70,
+                textColor: Color(MyColor.pr5),
+                textStyle: TextStyle(
+                  decoration: TextDecoration.underline,
+                ),
               ),
             ),
 
             const SizedBox(height: 100),
 
-            // Continue Options
             const ContinueOptions(),
 
             const SizedBox(height: 30),

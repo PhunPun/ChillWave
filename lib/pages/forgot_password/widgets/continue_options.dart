@@ -21,8 +21,8 @@ class ContinueOptions extends StatelessWidget {
         _buildContinueButton(
           imagePath: 'lib/assets/icons/google.png',
           text: 'Tiếp tục bằng Google',
-          backgroundColor: Colors.white,
-          textColor: Colors.black87,
+          backgroundColor: const Color(MyColor.white),
+          textColor: const Color(MyColor.black),
           borderColor: Colors.grey[300]!,
           onTap: () {
             // Handle Google continue option
@@ -36,7 +36,7 @@ class ContinueOptions extends StatelessWidget {
     required String imagePath,
     required String text,
     required Color backgroundColor,
-    Color textColor = Colors.white,
+    Color textColor = const Color(MyColor.white),
     Color? borderColor,
     required VoidCallback onTap,
   }) {

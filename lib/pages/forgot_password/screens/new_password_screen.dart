@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_input.dart';
 import '../widgets/continue_options.dart';
-
+import '../../../themes/colors/colors.dart';
 
 class NewPasswordScreen extends StatefulWidget {
   final Function(String password, String confirmPassword) onSubmit;
@@ -46,7 +46,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                 width: 80, // Slightly larger
                 height: 80, // Slightly larger
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: ClipRRect(
@@ -67,10 +67,10 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
               margin: const EdgeInsets.only(bottom: 30),
               child: const Center(
                 child: Text(
-                  'Your password must be at-least\n8 characters long',
+                  'Your password must be at-least 8 characters long',
                   style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
+                    fontSize: 14,
+                    color: Color(MyColor.black),
                     fontWeight: FontWeight.w400,
                     fontStyle: FontStyle.italic,
                   ),

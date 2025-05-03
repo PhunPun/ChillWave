@@ -37,7 +37,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
           Container(
             width: double.infinity,
             height: MediaQuery.of(context).size.height,
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
           ),
           
           Padding(
@@ -54,7 +54,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: ClipRRect(
@@ -91,11 +91,11 @@ class _VerificationScreenState extends State<VerificationScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: const Color(MyColor.pr4).withOpacity(0.7),
+                    color: const Color(MyColor.pr4).withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -124,7 +124,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                           'a verification code has been sent to your email',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.black,
+                            color: Color(MyColor.black),
                           ),
                         ),
                       ),
@@ -154,7 +154,10 @@ class _VerificationScreenState extends State<VerificationScreen> {
                         child: TextLinkButton(
                           text: 'Change Email',
                           onPressed: widget.onChangeEmail,
-                          textColor: Colors.black87,
+                          textColor: Color(MyColor.pr6),
+                          textStyle: TextStyle(
+                            decoration: TextDecoration.underline,
+                          ),
                         ),
                       ),
                     ],
@@ -168,14 +171,14 @@ class _VerificationScreenState extends State<VerificationScreen> {
                     _buildDisabledContinueButton(
                       imagePath: 'lib/assets/icons/email.png',
                       text: 'Tiếp tục với email',
-                      backgroundColor: const Color(MyColor.pr5).withOpacity(0.5),
+                      backgroundColor: const Color(MyColor.pr5).withValues(alpha: 0.5),
                     ),
                     const SizedBox(height: 10),
                     _buildDisabledContinueButton(
                       imagePath: 'lib/assets/icons/google.png',
                       text: 'Tiếp tục bằng Google',
-                      backgroundColor: Colors.white.withOpacity(0.5),
-                      textColor: Colors.black87.withOpacity(0.5),
+                      backgroundColor: Colors.white.withValues(alpha: 0.5),
+                      textColor: Colors.black87.withValues(alpha: 0.5),
                       borderColor: Colors.grey[300]!,
                     ),
                   ],
@@ -194,7 +197,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
     required String imagePath,
     required String text,
     required Color backgroundColor,
-    Color textColor = Colors.white,
+    Color textColor = const Color(MyColor.white),
     Color? borderColor,
   }) {
     return Container(
