@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "115926770267",
+    "project_id": "chillwave-1134f",
+    "storage_bucket": "chillwave-1134f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:115926770267:android:26aa00c69de97b7926557e",
+        "android_client_info": {
+          "package_name": "com.example.chillwave"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJvtbmOdi2Qn_OxuNq48SO7mLCJbus43o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
