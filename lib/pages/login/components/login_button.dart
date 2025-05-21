@@ -14,7 +14,7 @@ class LoginButton extends StatelessWidget {
       margin: const EdgeInsets.only(top: 16),
       child: ElevatedButton(
         onPressed: () {
-          context.goNamed(RouterName.home);
+          context.goNamed(RouterName.profile);
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Color(MyColor.pr4),

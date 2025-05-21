@@ -107,7 +107,7 @@ class _LoginPageState extends State<LoginPage> {
                         onPressed: () {
                           if (_usernameController.text.isNotEmpty && 
                               _passwordController.text.isNotEmpty) {
-                            context.goNamed(RouterName.home);
+                            context.goNamed(RouterName.profile);
                           } else {
                             // Show error
                             ScaffoldMessenger.of(context).showSnackBar(

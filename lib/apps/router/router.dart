@@ -1,12 +1,9 @@
 import 'package:chillwave/apps/router/router_name.dart';
-import 'package:chillwave/pages/home/home_page.dart';
-import 'package:chillwave/pages/register/register_page.dart';
-import 'package:chillwave/pages/welcome/welcome_page.dart';
+import 'package:chillwave/pages/profile/user_profile_page.dart';
 import 'package:chillwave/pages/login/login_page.dart';
 import 'package:chillwave/pages/forgot_password/forgot_password_page.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
-
 class RouterCustum {
   static final GoRouter router = GoRouter(
     initialLocation: '/',
@@ -15,7 +12,7 @@ class RouterCustum {
         path: '/',
         name: RouterName.welcome,
         builder: (BuildContext context, GoRouterState state) {
-          return const RegisterPage();
+          return const LoginPage();
         },
       ),
       GoRoute(
@@ -32,7 +29,13 @@ class RouterCustum {
           return const ForgotPasswordPage();
         },
       ),
-      
+      GoRoute(
+        path: '/Profile-page',
+        name: RouterName.profile,
+        builder: (BuildContext context, GoRouterState state) {
+          return const UserProfilePage();
+        },
+      ),
       
     ],
   );
