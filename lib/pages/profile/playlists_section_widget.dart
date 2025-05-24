@@ -3,10 +3,8 @@ import 'package:flutter/material.dart';
 class PlaylistsSectionWidget extends StatelessWidget {
   final List<Map<String, dynamic>> playlists;
 
-  const PlaylistsSectionWidget({
-    Key? key,
-    required this.playlists,
-  }) : super(key: key);
+  const PlaylistsSectionWidget({Key? key, required this.playlists})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -22,11 +20,14 @@ class PlaylistsSectionWidget extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         playlists.isNotEmpty
-            ? SizedBox(
+            ? Align(
+              alignment: Alignment.centerLeft,
+              child: SizedBox(
                 height: 140,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.only(left: 16),
                   itemCount: playlists.length,
                   itemBuilder: (context, index) {
                     final playlist = playlists[index];
@@ -81,20 +82,25 @@ class PlaylistsSectionWidget extends StatelessWidget {
                     );
                   },
                 ),
-              )
-            : Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                height: 120,
-                width: 120,
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Center(
-                      child: Text(
+              ),
+            )
+            : Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16), // Cách trái 16px
+                child: Container(
+                  margin: const EdgeInsets.symmetric(vertical: 10),
+                  height: 120,
+                  width: 120,
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
                         'PIED MIR',
                         style: TextStyle(
                           color: Colors.white,
@@ -102,16 +108,18 @@ class PlaylistsSectionWidget extends StatelessWidget {
                           fontSize: 18,
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
+            ),
+
         const SizedBox(height: 10),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+        const Padding(
+          padding: EdgeInsets.only(left: 16),
           child: Text(
             'My love',
-            style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+            style: TextStyle(fontSize: 14, color: Colors.grey),
           ),
         ),
       ],

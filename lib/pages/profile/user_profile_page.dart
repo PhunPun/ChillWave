@@ -6,6 +6,7 @@ import 'profile_completion_widget.dart';
 import 'playlists_section_widget.dart';
 import 'favorites_section_widget.dart';
 import 'user_profile_service.dart';
+import '../../themes/colors/colors.dart';
 
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({Key? key}) : super(key: key);
@@ -136,9 +137,23 @@ class _UserProfilePageState extends State<UserProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _buildUserProfile(),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(MyColor.pr4), // hồng nhạt trên
+              Color(MyColor.pr2), // hồng cam
+              Color(MyColor.se2), // xanh dương nhạt dưới
+            ],
+            stops: [0.0, 0.4, 1.0],
+          ),
+        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _buildUserProfile(),
+      ),
     );
   }
 
