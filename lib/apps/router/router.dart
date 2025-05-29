@@ -13,7 +13,7 @@ class RouterCustum {
         path: '/',
         name: RouterName.welcome,
         builder: (BuildContext context, GoRouterState state) {
-          return const LoginPage();
+          return const UserProfilePage();
         },
       ),
       GoRoute(
