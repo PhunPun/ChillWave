@@ -5,6 +5,7 @@ import 'package:chillwave/pages/forgot_password/forgot_password_page.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:chillwave/pages/search/search_page.dart';
+import 'package:chillwave/pages/welcome/welcome_page.dart';
 
 class RouterCustum {
   static final GoRouter router = GoRouter(
@@ -12,9 +13,9 @@ class RouterCustum {
     routes: <RouteBase>[
       GoRoute(
         path: '/',
-        name: RouterName.search,
+        name: RouterName.welcome,
         builder: (BuildContext context, GoRouterState state) {
-          return const SearchPage();
+          return const WelcomePage();
         },
       ),
       GoRoute(
