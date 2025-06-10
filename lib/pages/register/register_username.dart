@@ -1,10 +1,8 @@
-import 'package:chillwave/controllers/register_controller/emailController.dart';
-import 'package:chillwave/controllers/register_controller/password_controller.dart';
 import 'package:chillwave/controllers/register_controller/register_flow_controller.dart';
 import 'package:chillwave/controllers/register_controller/username_controller.dart';
 import 'package:chillwave/themes/colors/colors.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+
 
 class RegisterUsername extends StatefulWidget {
   final String email;
@@ -105,7 +103,8 @@ class _RegisterUsernameState extends State<RegisterUsername> {
               Center(
                 child: ElevatedButton(
                   onPressed: _usernameController.isUsernameValid ? () async {
-                    final username = _usernameController.usernameController.text.trim();                    final registerFlow = RegisterFlowController();
+                    final username = _usernameController.usernameController.text.trim();                    
+                    final registerFlow = RegisterFlowController();
                     final error = await registerFlow.registerUser(
                       email: widget.email,
                       password: widget.password,

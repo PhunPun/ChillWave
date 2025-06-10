@@ -1,21 +1,89 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/song_model.dart';
 
 class MusicController {
-  Future<SongModel?> getSong(String docId) async {
-    final doc = await FirebaseFirestore.instance.collection('songs').doc('GcA5kafc4VrxXPxl80Cj').get();
+  final userId = FirebaseAuth.instance.currentUser?.uid;
+  Stream<List<SongModel>> getAllSongs() {
+    return FirebaseFirestore.instance
+      .collection('songs')
+      .snapshots()
+      .map((querySnapshot) {
+        return querySnapshot.docs.map((doc) {
+          final data = doc.data();
+          final rawLink = data['audio_url'] ?? '';
+          final convertedLink = _convertDriveLink(rawLink);
+          final updatedData = {
+            ...data,
+            'audio_url': convertedLink,
+          };
 
-    if (doc.exists) {
-      final rawLink = doc['linkMp3'];
-      final convertedLink = _convertDriveLink(rawLink);
-
-      return SongModel(
-        name: doc['name'],
-        linkMp3: convertedLink,
-      );
-    }
-    return null;
+          return SongModel.fromMap(doc.id, updatedData);
+        }).toList();
+      }
+    );
   }
+
+  Stream<List<SongModel>> getFavoriteArtistSongs() async* {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) {
+      yield [];
+      return;
+    }
+
+    final favRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('favorites')
+        .where('categories', isEqualTo: 'artists');
+
+    await for (final favSnapshot in favRef.snapshots()) {
+      final Set<String> favoriteArtistIds = {};
+
+      for (var doc in favSnapshot.docs) {
+        final data = doc.data();
+        if (data['artist_id'] is List) {
+          favoriteArtistIds.addAll(List<String>.from(data['artist_id']));
+        }
+      }
+
+      if (favoriteArtistIds.isEmpty) {
+        yield [];
+        continue;
+      }
+
+      final List<SongModel> filteredSongs = [];
+
+      // Chia theo nhóm ≤ 10 phần tử vì Firestore whereIn chỉ hỗ trợ tối đa 10 phần tử mỗi lần
+      final List<List<String>> chunkedArtistIds = _chunkList(favoriteArtistIds.toList(), 10);
+
+      for (var chunk in chunkedArtistIds) {
+        final songQuery = await FirebaseFirestore.instance
+            .collection('songs')
+            .where('artist_id', arrayContainsAny: chunk)
+            .get();
+
+        for (var doc in songQuery.docs) {
+          final data = doc.data();
+
+          // Đảm bảo bài này thực sự có nghệ sĩ trong danh sách yêu thích
+          final List<String> songArtistIds = List<String>.from(data['artist_id'] ?? []);
+          final isMatch = songArtistIds.any(favoriteArtistIds.contains);
+          if (isMatch) {
+            final rawLink = data['audio_url'] ?? '';
+            final updatedData = {
+              ...data,
+              'audio_url': _convertDriveLink(rawLink),
+            };
+
+            filteredSongs.add(SongModel.fromMap(doc.id, updatedData));
+          }
+        }
+      }
+      yield filteredSongs;
+    }
+  }
+
 
   String _convertDriveLink(String originalLink) {
     final regExp = RegExp(r'd\/(.*?)\/');
@@ -27,4 +95,73 @@ class MusicController {
     }
     return originalLink;
   }
+  List<List<T>> _chunkList<T>(List<T> list, int chunkSize) {
+    List<List<T>> chunks = [];
+    for (var i = 0; i < list.length; i += chunkSize) {
+      chunks.add(list.sublist(i, i + chunkSize > list.length ? list.length : i + chunkSize));
+    }
+    return chunks;
+  }
+  Stream<List<SongModel>> getTopPlayedSongs() {
+    return FirebaseFirestore.instance
+      .collection('songs')
+      .orderBy('play_count', descending: true)
+      .limit(100)
+      .snapshots()
+      .map((snapshot) {
+        return snapshot.docs.map((doc) {
+          final data = doc.data();
+          final rawLink = data['audio_url'] ?? '';
+          final updatedData = {
+            ...data,
+            'audio_url': _convertDriveLink(rawLink),
+          };
+          return SongModel.fromMap(doc.id, updatedData);
+        }).toList();
+      }
+    );
+  }
+  Stream<List<SongModel>> getSongsByYear(String country) {
+    final songsCollection = FirebaseFirestore.instance.collection('songs');
+    Query query = songsCollection;
+
+    if (country != 'all') {
+      query = query.where('country', isEqualTo: country);
+    }
+
+    return query
+        .orderBy('year', descending: true)
+        .limit(20)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) {
+            final Map<String, dynamic> data = doc.data() as Map<String, dynamic>; // ✅ ép kiểu
+            final rawLink = data['audio_url'] ?? '';
+            final Map<String, dynamic> updatedData = {
+              ...data,
+              'audio_url': _convertDriveLink(rawLink), // ✅ dùng đúng tên hàm
+            };
+            return SongModel.fromMap(doc.id, updatedData);
+          }).toList();
+        });
+  }
+
+  Stream<List<SongModel>> getSongsByArtistId(String artistId) {
+    return FirebaseFirestore.instance
+        .collection('songs')
+        .where('artist_id', arrayContains: artistId)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) {
+            final Map<String, dynamic> data = doc.data();
+            final rawLink = data['audio_url'] ?? '';
+            final updatedData = {
+              ...data,
+              'audio_url': _convertDriveLink(rawLink),
+            };
+            return SongModel.fromMap(doc.id, updatedData);
+          }).toList();
+        });
+  }
+
 }
