@@ -1,8 +1,11 @@
 import 'package:chillwave/pages/library/components/listendmusic.dart';
+import 'package:chillwave/pages/playmusicscreen/playmusic.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../../../themes/colors/colors.dart';
+import '../../../controllers/music_controller.dart';
+import '../../../models/song_model.dart';
 
 // Model cho Song
 class Song {
@@ -117,7 +120,22 @@ class _PlaylistsTabState extends State<PlaylistsTab> {
       QuerySnapshot snapshot = await _firestore.collection('songs').get();
       
       setState(() {
-        _songs = snapshot.docs.map((doc) => Song.fromFirestore(doc)).toList();
+       final controller = MusicController();
+_songs = snapshot.docs.map((doc) {
+  final song = Song.fromFirestore(doc);
+  final convertedUrl = controller.convertDriveLink(song.audioUrl);
+  return Song(
+    id: song.id,
+    artistId: song.artistId,
+    audioUrl: convertedUrl,
+    country: song.country,
+    duration: song.duration,
+    songImageUrl: song.songImageUrl,
+    songName: song.songName,
+    year: song.year,
+  );
+}).toList();
+
         _isLoading = false;
       });
       
@@ -430,7 +448,26 @@ class _PlaylistsTabState extends State<PlaylistsTab> {
               ),
             ),
             GestureDetector(
-              onTap: () => _playSong(song),
+             onTap: () {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => MusicPlayerScreen(
+        song: SongModel(
+          id: song.id,
+          name: song.songName,
+          linkMp3: song.audioUrl,
+          imageUrl: song.songImageUrl,
+          artistIds: [song.artistId], // tạm thời lấy 1 ID, bạn có thể đổi
+          loveCount: 0,
+          playCount: 0,
+          year: song.year,
+        ),
+      ),
+    ),
+  );
+},
+
               child: Container(
                 width: 40,
                 height: 40,

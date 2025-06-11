@@ -1,4 +1,3 @@
-
 import 'package:chillwave/pages/profile/components/profile_edit.dart';
 import 'package:flutter/material.dart';
 import '../../../themes/colors/colors.dart';

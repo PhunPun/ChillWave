@@ -1,6 +1,10 @@
+import 'package:chillwave/apps/router/router_name.dart';
 import 'package:chillwave/pages/register/register_email.dart';
+import 'package:chillwave/services/auth_service.dart';
 import 'package:chillwave/themes/colors/colors.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class RegisterPage extends StatelessWidget {
   const RegisterPage({super.key});
@@ -81,8 +85,40 @@ class RegisterPage extends StatelessWidget {
                       )
                     )
                   ),
-                  onPressed: () {
-                    // TODO: navigator.push
+                  onPressed: () async {
+                    final userCredential = await AuthService.signInWithGoogle();
+                    if (!context.mounted) return;
+
+                    if (userCredential != null) {
+                      final user = userCredential.user!;
+                      final uid = user.uid;
+
+                      final favoritesRef = FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(uid)
+                        .collection('favorites')
+                        .where('categories', isEqualTo: 'artists');
+                      final snapshot = await favoritesRef.get();
+                      if (!context.mounted) return;
+                      if (snapshot.docs.isEmpty) {
+                        context.goNamed(RouterName.select);
+                      } else {
+                        context.goNamed(RouterName.home);
+                      }
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Đăng nhập thành công: ${user.email}"),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Đăng nhập thất bại hoặc bị hủy."),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
                   },
                   child: Row(
                     children: [
@@ -112,9 +148,6 @@ class RegisterPage extends StatelessWidget {
                 'Bạn đã có tài khoản?'
               ),
               InkWell(
-                onTap: (){
-                  // TODO: navigator.push loginPage
-                },
                 child: Text(
                   'Đăng nhập',
                   style: TextStyle(

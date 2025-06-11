@@ -1,10 +1,13 @@
 import 'package:chillwave/apps/router/router_name.dart';
 import 'package:chillwave/pages/library/page_library.dart';
+import 'package:chillwave/pages/home/home_page.dart';
 import 'package:chillwave/pages/profile/user_profile_page.dart';
 import 'package:chillwave/pages/login/login_page.dart';
 import 'package:chillwave/pages/forgot_password/forgot_password_page.dart';
+import 'package:chillwave/pages/select_artist.dart/select_artist_page.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
+import 'package:chillwave/pages/playmusicscreen/playmusic.dart';
 
 class RouterCustum {
   static final GoRouter router = GoRouter(
@@ -15,6 +18,20 @@ class RouterCustum {
         name: RouterName.welcome,
         builder: (BuildContext context, GoRouterState state) {
           return ChillWaveScreen();
+        },
+      ),
+      GoRoute(
+        path: '/home',
+        name: RouterName.home,
+        builder: (BuildContext context, GoRouterState state) {
+          return const HomePage();
+        },
+      ),
+      GoRoute(
+        path: '/select',
+        name: RouterName.select,
+        builder: (BuildContext context, GoRouterState state) {
+          return const SelectArtistPage();
         },
       ),
       GoRoute(
