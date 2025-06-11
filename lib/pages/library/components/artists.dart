@@ -1,5 +1,5 @@
-import 'package:chillwave/pages/library/components/lisentedmusic.dart';
 import 'package:flutter/material.dart';
+import 'package:chillwave/pages/library/components/listendmusic.dart';
 import '../../../themes/colors/colors.dart';
 
 class ArtistsTab extends StatelessWidget {
