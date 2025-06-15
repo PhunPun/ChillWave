@@ -15,7 +15,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   String selectedCountry = 'Tất cả';
-  String country = 'all';
+  final ValueNotifier<String> countryNotifier = ValueNotifier<String>('all');
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,7 +49,7 @@ class _HomePageState extends State<HomePage> {
             Padding(
               padding: const EdgeInsets.only(left: 10),
               child: SizedBox(
-                height: 210,
+                height: 220,
                 child: SongList(),
               ),
             ),
@@ -124,12 +124,17 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: SizedBox(
-                height: 200,
-                child: NewSongList(country: country,),
-              ),
+            ValueListenableBuilder<String>(
+              valueListenable: countryNotifier,
+              builder: (context, country, _) {
+                return Padding(
+                  padding: const EdgeInsets.only(left: 10),
+                  child: SizedBox(
+                    height: 220,
+                    child: NewSongList(country: country),
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -143,14 +148,14 @@ class _HomePageState extends State<HomePage> {
       onPressed: () {
         setState(() {
           selectedCountry = title;
-          if(title == 'Việt Nam'){
-            country = 'Viet Nam';
-          } else if(title == 'Quốc tế'){
-            country = 'international';
-          }else{
-            country = 'all';
-          }
         });
+        if (title == 'Việt Nam') {
+          countryNotifier.value = 'Viet Nam';
+        } else if (title == 'Quốc tế') {
+          countryNotifier.value = 'international';
+        } else {
+          countryNotifier.value = 'all';
+        }
       },
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

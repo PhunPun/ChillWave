@@ -21,7 +21,7 @@ class RouterCustum {
         path: '/',
         name: RouterName.welcome,
         builder: (BuildContext context, GoRouterState state) {
-          return RegisterPage();
+          return HomePage();
         },
       ),
       GoRoute(

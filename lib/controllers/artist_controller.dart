@@ -74,6 +74,43 @@ class ArtistController {
       rethrow;
     }
   }
+  static Future<void> saveFavoriteSongs(Set<String> songIds) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('Chưa đăng nhập');
+      }
+
+      final userId = currentUser.uid;
+      final favoritesRef = _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('favorites');
+      final querySnapshot = await favoritesRef
+          .where('categories', isEqualTo: 'songs')
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        print('👀 Đang lưu ${songIds.length} bài hát: $songIds');
+
+        final doc = querySnapshot.docs.first;
+        await doc.reference.update({
+          'song_id': FieldValue.arrayUnion(songIds.toList()),
+          'updated_at': FieldValue.serverTimestamp(),
+        });
+      } else {
+        final newDocRef = favoritesRef.doc();
+        await newDocRef.set({
+          'song_id': songIds,
+          'categories': 'songs',
+          'created_at': FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
   static void printAllArtists() {
     getAllArtists().listen((artistList) {
       for (var artist in artistList) {
@@ -95,6 +132,67 @@ class ArtistController {
       return ArtistModel.fromMap(snapshot.data() as Map<String, dynamic>, snapshot.id);
     });
   }
+  static Future<void> saveSongToPlaylist({
+    String? playlistId,
+    required String songId,
+    String? playlistName,
+  }) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('Chưa đăng nhập');
+      }
 
+      final userId = currentUser.uid;
+      final playlistsRef = _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('playlists');
+
+      if (playlistId == null || playlistId.isEmpty) {
+        // Tạo mới playlist
+        await playlistsRef.add({
+          'song_ids': [songId],
+          'name': playlistName ?? 'Playlist mới',
+          'created_at': FieldValue.serverTimestamp(),
+        });
+      } else {
+        final playlistRef = playlistsRef.doc(playlistId);
+        final playlistDoc = await playlistRef.get();
+        if (playlistDoc.exists) {
+          // Nếu chưa có trường name thì thêm vào
+          if (!(playlistDoc.data()?.containsKey('name') ?? false)) {
+            await playlistRef.update({
+              'name': playlistName ?? 'Playlist mới',
+            });
+          }
+          await playlistRef.update({
+            'song_ids': FieldValue.arrayUnion([songId]),
+            'updated_at': FieldValue.serverTimestamp(),
+          });
+        } else {
+          await playlistRef.set({
+            'song_ids': [songId],
+            'name': playlistName ?? 'Playlist mới',
+            'created_at': FieldValue.serverTimestamp(),
+          });
+        }
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+  static Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> getUserPlaylists() async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      throw Exception('Chưa đăng nhập');
+    }
+    final snapshot = await _firestore
+        .collection('users')
+        .doc(currentUser.uid)
+        .collection('playlists')
+        .get();
+    return snapshot.docs;
+  }
 
 }

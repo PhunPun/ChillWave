@@ -4,7 +4,7 @@ import 'song_card.dart';
 import '../models/song_model.dart';
 import '../controllers/music_controller.dart';
 
-class NewSongList extends StatelessWidget {
+class NewSongList extends StatefulWidget {
   final String country;
   const NewSongList({
     super.key,
@@ -12,12 +12,23 @@ class NewSongList extends StatelessWidget {
     });
 
   @override
+  State<NewSongList> createState() => _NewSongListState();
+}
+
+class _NewSongListState extends State<NewSongList> {
+  late final MusicController musicController;
+
+  @override
+  void initState() {
+    super.initState();
+    musicController = MusicController(); // ✅ chỉ tạo 1 lần duy nhất
+  }
+  @override
   Widget build(BuildContext context) {
-    final MusicController musicController = MusicController();
     return SizedBox(
       height: 400,
       child: StreamBuilder<List<SongModel>>(
-        stream: musicController.getSongsByYear(country),
+        stream: musicController.getSongsByYear(widget.country),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return SongCardSkeleton(); // hiển thị loading khi đang chờ dữ liệu
