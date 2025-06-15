@@ -452,7 +452,7 @@ _songs = snapshot.docs.map((doc) {
   Navigator.push(
     context,
     MaterialPageRoute(
-      builder: (context) => MusicPlayerScreen(
+      builder: (context) =>MusicPlayerWithSwipeScreen(
         song: SongModel(
           id: song.id,
           name: song.songName,
