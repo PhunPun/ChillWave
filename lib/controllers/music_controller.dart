@@ -12,7 +12,7 @@ class MusicController {
         return querySnapshot.docs.map((doc) {
           final data = doc.data();
           final rawLink = data['audio_url'] ?? '';
-          final convertedLink = _convertDriveLink(rawLink);
+          final convertedLink = convertDriveLink(rawLink);
           final updatedData = {
             ...data,
             'audio_url': convertedLink,
@@ -73,7 +73,7 @@ class MusicController {
             final rawLink = data['audio_url'] ?? '';
             final updatedData = {
               ...data,
-              'audio_url': _convertDriveLink(rawLink),
+              'audio_url': convertDriveLink(rawLink),
             };
 
             filteredSongs.add(SongModel.fromMap(doc.id, updatedData));
@@ -85,7 +85,7 @@ class MusicController {
   }
 
 
-  String _convertDriveLink(String originalLink) {
+  String convertDriveLink(String originalLink) {
     final regExp = RegExp(r'd\/(.*?)\/');
     final match = regExp.firstMatch(originalLink);
 
@@ -114,7 +114,7 @@ class MusicController {
           final rawLink = data['audio_url'] ?? '';
           final updatedData = {
             ...data,
-            'audio_url': _convertDriveLink(rawLink),
+            'audio_url': convertDriveLink(rawLink),
           };
           return SongModel.fromMap(doc.id, updatedData);
         }).toList();
@@ -139,7 +139,7 @@ class MusicController {
             final rawLink = data['audio_url'] ?? '';
             final Map<String, dynamic> updatedData = {
               ...data,
-              'audio_url': _convertDriveLink(rawLink), // ✅ dùng đúng tên hàm
+              'audio_url': convertDriveLink(rawLink), // ✅ dùng đúng tên hàm
             };
             return SongModel.fromMap(doc.id, updatedData);
           }).toList();
@@ -157,7 +157,7 @@ class MusicController {
             final rawLink = data['audio_url'] ?? '';
             final updatedData = {
               ...data,
-              'audio_url': _convertDriveLink(rawLink),
+              'audio_url': convertDriveLink(rawLink),
             };
             return SongModel.fromMap(doc.id, updatedData);
           }).toList();
