@@ -3,14 +3,25 @@ import 'package:chillwave/widgets/collection_card.dart';
 import 'package:chillwave/widgets/skeleton/collection_skeleton.dart';
 import 'package:flutter/material.dart';
 
-class CollectionList extends StatelessWidget {
+class CollectionList extends StatefulWidget {
   const CollectionList({super.key});
 
   @override
+  State<CollectionList> createState() => _CollectionListState();
+}
+
+class _CollectionListState extends State<CollectionList> {
+  late final Stream favoriteArtistStream;
+
+  @override
+  void initState() {
+    super.initState();
+    favoriteArtistStream = ArtistController.getFavoriteArtists();
+  }
+  @override
   Widget build(BuildContext context) {
-     final favoriteArtist = ArtistController.getFavoriteArtists();
     return StreamBuilder(
-      stream: favoriteArtist, 
+      stream: favoriteArtistStream, 
       builder: (context, snapshot){
         if (snapshot.connectionState == ConnectionState.waiting) {
           return CollectionSkeleton();
