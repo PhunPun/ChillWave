@@ -1,5 +1,6 @@
 import 'package:chillwave/apps/router/router_name.dart';
 import 'package:chillwave/pages/home/home_page.dart';
+import 'package:chillwave/pages/library/page_library.dart';
 import 'package:chillwave/pages/profile/user_profile_page.dart';
 import 'package:chillwave/pages/login/login_page.dart';
 import 'package:chillwave/pages/forgot_password/forgot_password_page.dart';
@@ -15,7 +16,7 @@ class RouterCustum {
         path: '/',
         name: RouterName.welcome,
         builder: (BuildContext context, GoRouterState state) {
-          return UserProfilePage();
+          return ChillWaveScreen();
         },
       ),
       GoRoute(

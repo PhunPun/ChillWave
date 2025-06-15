@@ -1,3 +1,6 @@
+// music_player_with_swipe_screen.dart
+import 'package:chillwave/pages/playmusicscreen/components/music_player_screen.dart';
+import 'package:chillwave/pages/playmusicscreen/components/music_playlist_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -6,7 +9,7 @@ import '../../themes/colors/colors.dart';
 
 class MusicPlayerWithSwipeScreen extends StatefulWidget {
   final SongModel song;
-  final List<SongModel>? playlist; // Danh sách bài hát tương tự
+  final List<SongModel>? playlist;
 
   const MusicPlayerWithSwipeScreen({
     Key? key, 
@@ -143,347 +146,6 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
     });
   }
 
-  // Màn hình player chính
-  Widget _buildPlayerScreen() {
-    return Container(
-      color: Color(MyColor.white),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 0),
-        child: Column(
-          children: [
-            SizedBox(height: 60),
-            // Album Art
-            Transform.rotate(
-              angle: _currentAngle,
-              child: Container(
-                width: 280,
-                height: 280,
-                child: ClipOval(
-                  child: Image.network(
-                    widget.song.imageUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        Icon(Icons.music_note, size: 80),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 100),
-            // Song Info, Slider, và Controls
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                children: [
-                  // Song Info
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.song.name.toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Color(MyColor.pr4),
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                            Text(
-                              artistNames.isNotEmpty
-                                  ? artistNames.join(', ')
-                                  : 'Đang tải nghệ sĩ...',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Color(MyColor.grey),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: isFavorite ? Color(MyColor.pr4) : Color(MyColor.grey),
-                          size: 28,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            isFavorite = !isFavorite;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 10),
-                  // Progress Slider
-                  SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      activeTrackColor: Color(MyColor.pr4),
-                      inactiveTrackColor: Color(MyColor.se1),
-                      thumbColor: Color(MyColor.pr4),
-                      thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6),
-                      trackHeight: 2,
-                    ),
-                    child: Slider(
-                      min: 0,
-                      max: _duration.inSeconds.toDouble(),
-                      value: _position.inSeconds.clamp(0, _duration.inSeconds).toDouble(),
-                      onChanged: (value) async {
-                        final newPos = Duration(seconds: value.toInt());
-                        await _audioPlayer.seek(newPos);
-                      },
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _formatDuration(_position),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(MyColor.grey),
-                        ),
-                      ),
-                      Text(
-                        _formatDuration(_duration),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(MyColor.grey),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 10),
-                  // Control Buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Icon(Icons.shuffle, color: Color(MyColor.grey), size: 24),
-                      Icon(Icons.skip_previous, color: Color(MyColor.black), size: 32),
-                      Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          color: Color(MyColor.pr4),
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            isPlaying ? Icons.pause : Icons.play_arrow,
-                            color: Color(MyColor.white),
-                            size: 28,
-                          ),
-                          onPressed: _togglePlayPause,
-                        ),
-                      ),
-                      Icon(Icons.skip_next, color: Color(MyColor.black), size: 32),
-                      Icon(Icons.repeat, color: Color(MyColor.grey), size: 24),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Spacer(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Màn hình danh sách bài hát tương tự
-  Widget _buildPlaylistScreen() {
-    return Container(
-      color: Color(MyColor.white),
-      child: Column(
-        children: [
-          SizedBox(height: 20),
-          // Header với thông tin bài hát hiện tại
-          Container(
-            margin: EdgeInsets.all(16),
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Color(MyColor.pr4).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    widget.song.imageUrl,
-                    width: 60,
-                    height: 60,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        Container(
-                          width: 60,
-                          height: 60,
-                          color: Color(MyColor.se1),
-                          child: Icon(Icons.music_note),
-                        ),
-                  ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.song.name,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(MyColor.pr4),
-                        ),
-                      ),
-                      Text(
-                        artistNames.isNotEmpty ? artistNames.join(', ') : 'Soobin',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Color(MyColor.grey),
-                        ),
-                      ),
-                      Text(
-                        'Đã phát nổi bật',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(MyColor.grey),
-                        ),
-                      ),
-                      Text(
-                        '2024',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(MyColor.grey),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          // Stats row
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Icon(Icons.favorite_border, size: 20, color: Color(MyColor.grey)),
-                SizedBox(width: 4),
-                Text('214.2K', style: TextStyle(color: Color(MyColor.grey))),
-                Spacer(),
-                Text('6M', style: TextStyle(color: Color(MyColor.grey))),
-                SizedBox(width: 4),
-                Icon(Icons.headphones, size: 20, color: Color(MyColor.grey)),
-              ],
-            ),
-          ),
-          
-          SizedBox(height: 20),
-          
-          // Bài hát tương tự header
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Text(
-                  'Bài hát tương tự',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(MyColor.black),
-                  ),
-                ),
-                Spacer(),
-                Icon(Icons.chevron_right, color: Color(MyColor.grey)),
-              ],
-            ),
-          ),
-          
-          SizedBox(height: 12),
-          
-          // Danh sách bài hát
-          Expanded(
-            child: ListView.builder(
-              itemCount: widget.playlist?.length ?? 3, // Default 3 items if no playlist
-              itemBuilder: (context, index) {
-                // Dữ liệu mẫu nếu không có playlist
-                final songs = widget.playlist ?? [
-                  widget.song, // Current song
-                  widget.song, // Duplicate for demo
-                  widget.song, // Duplicate for demo
-                ];
-                
-                return Container(
-                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Color(MyColor.pr4).withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: Image.network(
-                          songs[index].imageUrl,
-                          width: 50,
-                          height: 50,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container(
-                                width: 50,
-                                height: 50,
-                                color: Color(MyColor.se1),
-                                child: Icon(Icons.music_note, size: 20),
-                              ),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              songs[index].name,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Color(MyColor.black),
-                              ),
-                            ),
-                            Text(
-                              'Nghệ sĩ ${index + 1}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Color(MyColor.grey),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.play_arrow, color: Color(MyColor.pr4)),
-                        onPressed: () {
-                          // Handle play different song
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -520,8 +182,31 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
           });
         },
         children: [
-          _buildPlayerScreen(),
-          _buildPlaylistScreen(),
+          MusicPlayerScreen(
+            song: widget.song,
+            currentAngle: _currentAngle,
+            isPlaying: isPlaying,
+            isFavorite: isFavorite,
+            duration: _duration,
+            position: _position,
+            artistNames: artistNames,
+            formatDuration: _formatDuration,
+            togglePlayPause: _togglePlayPause,
+            toggleFavorite: () {
+              setState(() {
+                isFavorite = !isFavorite;
+              });
+            },
+            onSeek: (value) async {
+              final newPos = Duration(seconds: value.toInt());
+              await _audioPlayer.seek(newPos);
+            },
+          ),
+          MusicPlaylistScreen(
+            song: widget.song,
+            playlist: widget.playlist,
+            artistNames: artistNames,
+          ),
         ],
       ),
       // Bottom player - chỉ hiện ở playlist screen (page index 1)
