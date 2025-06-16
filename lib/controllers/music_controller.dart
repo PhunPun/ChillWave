@@ -12,7 +12,7 @@ class MusicController {
         return querySnapshot.docs.map((doc) {
           final data = doc.data();
           final rawLink = data['audio_url'] ?? '';
-          final convertedLink = _convertDriveLink(rawLink);
+          final convertedLink = convertDriveLink(rawLink);
           final updatedData = {
             ...data,
             'audio_url': convertedLink,
@@ -73,7 +73,7 @@ class MusicController {
             final rawLink = data['audio_url'] ?? '';
             final updatedData = {
               ...data,
-              'audio_url': _convertDriveLink(rawLink),
+              'audio_url': convertDriveLink(rawLink),
             };
 
             filteredSongs.add(SongModel.fromMap(doc.id, updatedData));
@@ -85,7 +85,7 @@ class MusicController {
   }
 
 
-  String _convertDriveLink(String originalLink) {
+  String convertDriveLink(String originalLink) {
     final regExp = RegExp(r'd\/(.*?)\/');
     final match = regExp.firstMatch(originalLink);
 
@@ -114,7 +114,7 @@ class MusicController {
           final rawLink = data['audio_url'] ?? '';
           final updatedData = {
             ...data,
-            'audio_url': _convertDriveLink(rawLink),
+            'audio_url': convertDriveLink(rawLink),
           };
           return SongModel.fromMap(doc.id, updatedData);
         }).toList();
@@ -139,7 +139,7 @@ class MusicController {
             final rawLink = data['audio_url'] ?? '';
             final Map<String, dynamic> updatedData = {
               ...data,
-              'audio_url': _convertDriveLink(rawLink), // ✅ dùng đúng tên hàm
+              'audio_url': convertDriveLink(rawLink), // ✅ dùng đúng tên hàm
             };
             return SongModel.fromMap(doc.id, updatedData);
           }).toList();
@@ -157,11 +157,73 @@ class MusicController {
             final rawLink = data['audio_url'] ?? '';
             final updatedData = {
               ...data,
-              'audio_url': _convertDriveLink(rawLink),
+              'audio_url': convertDriveLink(rawLink),
             };
             return SongModel.fromMap(doc.id, updatedData);
           }).toList();
         });
   }
+  Future<bool> isFavoriteSong(String songId) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return false;
+
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('favorites')
+        .where('categories', isEqualTo: 'songs')
+        .get();
+
+    for (var doc in querySnapshot.docs) {
+      final songIds = List<String>.from(doc.data()['song_id'] ?? []);
+      if (songIds.contains(songId)) return true;
+    }
+
+    return false;
+  }
+
+
+
+  // Thêm hoặc gỡ yêu thích bài hát
+  Future<void> toggleFavoriteSong(SongModel song) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final favCollection = FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('favorites');
+
+    final querySnapshot = await favCollection
+        .where('categories', isEqualTo: 'songs')
+        .get();
+
+    DocumentReference? targetDoc;
+    List<String> currentList = [];
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      targetDoc = doc.reference;
+      currentList = List<String>.from(doc['song_id'] ?? []);
+    } else {
+      targetDoc = favCollection.doc(); // tạo mới nếu chưa có
+    }
+
+    final alreadyFavorite = currentList.contains(song.id);
+
+    if (alreadyFavorite) {
+      currentList.remove(song.id);
+    } else {
+      currentList.add(song.id);
+    }
+
+    await targetDoc.set({
+      'song_id': currentList,
+      'categories': 'songs',
+      'updated_at': FieldValue.serverTimestamp(),
+      'created_at': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
 
 }

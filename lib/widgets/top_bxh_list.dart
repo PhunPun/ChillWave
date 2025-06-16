@@ -1,9 +1,10 @@
 import 'package:chillwave/controllers/music_controller.dart';
+import 'package:chillwave/models/song_model.dart';
 import 'package:chillwave/widgets/skeleton/top_bxh_skeleton.dart';
 import 'package:chillwave/widgets/top_bxh_card.dart';
 import 'package:flutter/material.dart';
 
-class TopBxhList extends StatelessWidget {
+class TopBxhList extends StatefulWidget {
   final int topNumber;
   final bool? full;
   const TopBxhList({
@@ -13,9 +14,21 @@ class TopBxhList extends StatelessWidget {
   });
 
   @override
+  State<TopBxhList> createState() => _TopBxhListState();
+}
+
+class _TopBxhListState extends State<TopBxhList> {
+  late final Stream<List<SongModel>> topSongsStream;
+
+  @override
+  void initState() {
+    super.initState();
+    topSongsStream = MusicController().getTopPlayedSongs();
+  }
+  @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-      stream: MusicController().getTopPlayedSongs(), 
+      stream: topSongsStream, 
       builder: (context, snapshot){
         if (snapshot.connectionState == ConnectionState.waiting) {
           return TopBxhSkeleton();
@@ -27,11 +40,11 @@ class TopBxhList extends StatelessWidget {
         return ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemBuilder: (context, index) => (full ?? false) 
-            ? TopBxhCard(song: songs![index], topIndex: index+1, full: full,) 
-            : TopBxhCard(song: songs![index], topIndex: index+1), 
+          itemBuilder: (context, index) => (widget.full ?? false) 
+            ? TopBxhCard(song: songs[index], topIndex: index+1, full: widget.full,) 
+            : TopBxhCard(song: songs[index], topIndex: index+1), 
           separatorBuilder: (_,_) => const SizedBox(), 
-          itemCount: songs!.length < topNumber ? songs.length : topNumber
+          itemCount: songs!.length < widget.topNumber ? songs.length : widget.topNumber
         );
       }
     );

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../../themes/colors/colors.dart';
 
 class SearchPage extends StatefulWidget {
@@ -301,7 +300,6 @@ class _SearchPageState extends State<SearchPage> {
           ),
         ],
       ),
-      bottomNavigationBar: _BottomNavBar(),
     );
   }
 }
@@ -427,95 +425,6 @@ class _RecentCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _BottomNavBar extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 64,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [Color(0xFFFFEEE8), Color(0xFFF9E9FF)],
-        ),
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x11000000),
-            blurRadius: 8,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _NavBarIcon(
-            asset: 'assets/icons/home.png',
-            label: 'Trang chủ',
-            selected: false,
-          ),
-          _NavBarIcon(
-            asset: 'assets/icons/library.png',
-            label: 'Thư viện',
-            selected: false,
-          ),
-          _NavBarIcon(
-            asset: 'assets/icons/search.png',
-            label: 'Tìm kiếm',
-            selected: true,
-          ),
-          _NavBarIcon(
-            asset: 'assets/icons/profile.png',
-            label: 'Cá nhân',
-            selected: false,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NavBarIcon extends StatelessWidget {
-  final String asset;
-  final String label;
-  final bool selected;
-  const _NavBarIcon({
-    required this.asset,
-    required this.label,
-    required this.selected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Image.asset(
-          asset,
-          width: 28,
-          height: 28,
-          color:
-              selected ? const Color(MyColor.pr5) : const Color(MyColor.grey),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color:
-                selected ? const Color(MyColor.pr5) : const Color(MyColor.grey),
-          ),
-        ),
-      ],
     );
   }
 }

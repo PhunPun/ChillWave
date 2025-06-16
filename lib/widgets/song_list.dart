@@ -4,15 +4,27 @@ import 'song_card.dart';
 import '../models/song_model.dart';
 import '../controllers/music_controller.dart';
 
-class SongList extends StatelessWidget {
+class SongList extends StatefulWidget {
   const SongList({super.key});
 
+  @override
+  State<SongList> createState() => _SongListState();
+}
+
+class _SongListState extends State<SongList> {
+  late final Stream<List<SongModel>> favoriteSongStream;
+
+  @override
+  void initState() {
+    super.initState();
+    favoriteSongStream = MusicController().getFavoriteArtistSongs();
+  }
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: 400,
       child: StreamBuilder<List<SongModel>>(
-        stream: MusicController().getFavoriteArtistSongs(),
+        stream: favoriteSongStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return SongCardSkeleton();
