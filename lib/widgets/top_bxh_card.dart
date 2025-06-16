@@ -2,6 +2,7 @@ import 'package:chillwave/controllers/artist_controller.dart';
 import 'package:chillwave/controllers/playlist_controller.dart';
 import 'package:chillwave/models/artist_model.dart';
 import 'package:chillwave/models/song_model.dart';
+import 'package:chillwave/pages/playmusicscreen/playmusic.dart';
 import 'package:chillwave/themes/colors/colors.dart';
 import 'package:flutter/material.dart';
 
@@ -20,175 +21,197 @@ class TopBxhCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final artistId = song.artistIds;
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: (full?? false)? 8 : 5),
-      width: 290,
-      child: Row(
-        children: [
-          Container(
-            width: (full?? false)? 50 : 35,
-            height: (full?? false)? 50 : 35,
-            padding: const EdgeInsets.all(1),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Color(MyColor.pr5),
-                width:(full?? false)? 2 : 1,
+    return InkWell(
+      onTap: (){
+        print('aaaaaaaaaaaaaaaaaaaa ${song.linkMp3}');
+        Navigator.push(context, 
+          MaterialPageRoute(
+            builder: (context) => MusicPlayerWithSwipeScreen(song: song,),
+          ),
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: (full?? false)? 8 : 5),
+        width: 290,
+        child: Row(
+          children: [
+            Container(
+              width: (full ?? false) ? 50 : 35,
+              height: (full ?? false) ? 50 : 35,
+              padding: const EdgeInsets.all(1),
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Color(MyColor.pr5),
+                  width: (full ?? false) ? 2 : 1,
+                ),
+                borderRadius: BorderRadius.circular(8),
               ),
-              borderRadius: BorderRadius.circular(8),
-              image: DecorationImage(image: NetworkImage(song.imageUrl))
-            ),
-          ),
-          SizedBox(
-            width: 25,
-            child: Column(
-              children: [
-                Text(
-                  topIndex.toString(),
-                  style: TextStyle(
-                    fontSize: (full?? false)? 14 : 13,
-                    color: Color(MyColor.pr6),
-                    fontWeight: FontWeight.bold
-                  ),
-                ),
-                Icon(
-                  Icons.circle,
-                  size: 8,
-                  color: Color(MyColor.se3),
-                )
-              ],
-            ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  song.name,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: (full?? false) ? 14 : 13,
-                    color: Color(MyColor.se5),
-                  ),
-                ),
-                StreamBuilder<List<ArtistModel>>(
-                  stream: ArtistController.getArtistsByIds(artistId),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) return const Text("Đang tải...");
-                    final artists = snapshot.data!;
-                    return Text(
-                      artists.map((a) => a.artistName).join(", "),
-                      style: TextStyle(
-                        fontSize: (full?? false) ? 13 : 12
-                      ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(6), // nhỏ hơn 8 để nằm trong viền
+                child: Image.network(
+                  song.imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Image.network(
+                      'https://i.pinimg.com/736x/19/55/48/195548510f8764f0c5245cd14d2adb16.jpg',
+                      fit: BoxFit.cover,
                     );
                   },
-                )
+                ),
+              ),
+            ),
+            SizedBox(
+              width: 25,
+              child: Column(
+                children: [
+                  Text(
+                    topIndex.toString(),
+                    style: TextStyle(
+                      fontSize: (full?? false)? 14 : 13,
+                      color: Color(MyColor.pr6),
+                      fontWeight: FontWeight.bold
+                    ),
+                  ),
+                  Icon(
+                    Icons.circle,
+                    size: 8,
+                    color: Color(MyColor.se3),
+                  )
+                ],
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    song.name,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: (full?? false) ? 14 : 13,
+                      color: Color(MyColor.se5),
+                    ),
+                  ),
+                  StreamBuilder<List<ArtistModel>>(
+                    stream: ArtistController.getArtistsByIds(artistId),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) return const Text("Đang tải...");
+                      final artists = snapshot.data!;
+                      return Text(
+                        artists.map((a) => a.artistName).join(", "),
+                        style: TextStyle(
+                          fontSize: (full?? false) ? 13 : 12
+                        ),
+                      );
+                    },
+                  )
+                ],
+              ),
+            ),
+            PopupMenuButton<String>(
+              padding: const EdgeInsets.all(0),
+              icon: const Icon(Icons.more_vert),
+              color: Colors.transparent,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: BorderSide(color: Color(MyColor.pr5), width: 1.0),
+              ),
+              onSelected: (value) async {
+                if (value == 'favorite') {
+                  try {
+                    await ArtistController.saveFavoriteSongs({song.id});
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Đã thêm vào yêu thích!'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Có lỗi xảy ra: $e'),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                } else if (value == 'playlist') {
+                  _showPlaylistDialog(context, song.id);
+                } else if (value == 'like_artist') {
+                  try {
+                    await ArtistController.saveFavoriteArtists({...song.artistIds});
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Đã thêm vào yêu thích!'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Có lỗi xảy ra: $e'),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                }
+              },
+              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                PopupMenuItem<String>(
+                  value: 'favorite',
+                  height: 38, // Giảm chiều cao
+                  padding: const EdgeInsets.symmetric(horizontal: 2,),
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Color(MyColor.pr3), // Màu nền riêng
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    child: const Text(
+                      '❤️ Yêu thích',
+                      style: TextStyle(color: Color(MyColor.se5)),
+                    ),
+                  ),
+                ), 
+                PopupMenuItem<String>(
+                  value: 'playlist',
+                  height: 38, // Giảm chiều cao
+                  padding: const EdgeInsets.symmetric(horizontal: 2,),
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Color(MyColor.pr4), // Màu nền riêng
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    child: const Text(
+                      '➕ Thêm vào danh sách',
+                      style: TextStyle(color: Color(MyColor.se5)),
+                    ),
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: 'like_artist',
+                  height: 38, // Giảm chiều cao
+                  padding: const EdgeInsets.symmetric(horizontal: 2,),
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Color(MyColor.pr5), // Màu nền riêng
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    child: const Text(
+                      '🎤 Thích nghệ sĩ',
+                      style: TextStyle(color: Color(MyColor.se5)),
+                    ),
+                  ),
+                ),
               ],
-            ),
-          ),
-          PopupMenuButton<String>(
-            padding: const EdgeInsets.all(0),
-            icon: const Icon(Icons.more_vert),
-            color: Colors.transparent,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-              side: BorderSide(color: Color(MyColor.pr5), width: 1.0),
-            ),
-            onSelected: (value) async {
-              if (value == 'favorite') {
-                try {
-                  await ArtistController.saveFavoriteSongs({song.id});
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Đã thêm vào yêu thích!'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Có lỗi xảy ra: $e'),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                }
-              } else if (value == 'playlist') {
-                _showPlaylistDialog(context, song.id);
-              } else if (value == 'like_artist') {
-                try {
-                  await ArtistController.saveFavoriteArtists({...song.artistIds});
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Đã thêm vào yêu thích!'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Có lỗi xảy ra: $e'),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                }
-              }
-            },
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              PopupMenuItem<String>(
-                value: 'favorite',
-                height: 38, // Giảm chiều cao
-                padding: const EdgeInsets.symmetric(horizontal: 2,),
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Color(MyColor.pr3), // Màu nền riêng
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  child: const Text(
-                    '❤️ Yêu thích',
-                    style: TextStyle(color: Color(MyColor.se5)),
-                  ),
-                ),
-              ), 
-              PopupMenuItem<String>(
-                value: 'playlist',
-                height: 38, // Giảm chiều cao
-                padding: const EdgeInsets.symmetric(horizontal: 2,),
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Color(MyColor.pr4), // Màu nền riêng
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  child: const Text(
-                    '➕ Thêm vào danh sách',
-                    style: TextStyle(color: Color(MyColor.se5)),
-                  ),
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: 'like_artist',
-                height: 38, // Giảm chiều cao
-                padding: const EdgeInsets.symmetric(horizontal: 2,),
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Color(MyColor.pr5), // Màu nền riêng
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  child: const Text(
-                    '🎤 Thích nghệ sĩ',
-                    style: TextStyle(color: Color(MyColor.se5)),
-                  ),
-                ),
-              ),
-            ],
-          )
-        ],
+            )
+          ],
+        ),
       ),
     );
   }

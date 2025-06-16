@@ -11,7 +11,6 @@ class ChillWaveScreen extends StatefulWidget {
 
 class _ChillWaveScreenState extends State<ChillWaveScreen> {
   int _selectedTab = 0;
-  int _selectedBottomTab = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -26,13 +25,6 @@ class _ChillWaveScreenState extends State<ChillWaveScreen> {
               child: Column(
                 children: [
                   // Top row with icons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Icon(Icons.search, color: Color(MyColor.se2), size: 35),
-                      Icon(Icons.menu, color: Color(MyColor.se2), size: 35),
-                    ],
-                  ),
                   SizedBox(height: 8),
                   // ChillWave title moved down with gradient
                   ShaderMask(
@@ -106,7 +98,6 @@ class _ChillWaveScreenState extends State<ChillWaveScreen> {
                       child: _buildTabContent(),
                     ),
                     
-                    SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -162,52 +153,5 @@ class _ChillWaveScreenState extends State<ChillWaveScreen> {
         return Container();
     }
   }
-  
-  Widget _buildBottomNavItem(IconData icon, String label, int index) {
-    bool isSelected = _selectedBottomTab == index;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedBottomTab = index),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? Color(MyColor.pr6) : Color(MyColor.grey),
-            size: 26,
-          ),
-          if (label.isNotEmpty) ...[
-            SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Color(MyColor.pr6) : Color(MyColor.grey),
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
 
-// Main App
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'ChillWave Library',
-      theme: ThemeData(
-        primarySwatch: Colors.pink,
-        fontFamily: 'SF Pro Display',
-      ),
-      home: ChillWaveScreen(),
-      debugShowCheckedModeBanner: false,
-    );
-  }
 }

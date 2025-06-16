@@ -163,5 +163,67 @@ class MusicController {
           }).toList();
         });
   }
+  Future<bool> isFavoriteSong(String songId) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return false;
+
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('favorites')
+        .where('categories', isEqualTo: 'songs')
+        .get();
+
+    for (var doc in querySnapshot.docs) {
+      final songIds = List<String>.from(doc.data()['song_id'] ?? []);
+      if (songIds.contains(songId)) return true;
+    }
+
+    return false;
+  }
+
+
+
+  // Thêm hoặc gỡ yêu thích bài hát
+  Future<void> toggleFavoriteSong(SongModel song) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final favCollection = FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('favorites');
+
+    final querySnapshot = await favCollection
+        .where('categories', isEqualTo: 'songs')
+        .get();
+
+    DocumentReference? targetDoc;
+    List<String> currentList = [];
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      targetDoc = doc.reference;
+      currentList = List<String>.from(doc['song_id'] ?? []);
+    } else {
+      targetDoc = favCollection.doc(); // tạo mới nếu chưa có
+    }
+
+    final alreadyFavorite = currentList.contains(song.id);
+
+    if (alreadyFavorite) {
+      currentList.remove(song.id);
+    } else {
+      currentList.add(song.id);
+    }
+
+    await targetDoc.set({
+      'song_id': currentList,
+      'categories': 'songs',
+      'updated_at': FieldValue.serverTimestamp(),
+      'created_at': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
 
 }

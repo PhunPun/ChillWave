@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:chillwave/pages/library/components/listendmusic.dart';
 import 'package:chillwave/pages/playmusicscreen/playmusic.dart';
 import 'package:flutter/material.dart';
@@ -7,69 +9,24 @@ import '../../../themes/colors/colors.dart';
 import '../../../controllers/music_controller.dart';
 import '../../../models/song_model.dart';
 
-// Model cho Song
-class Song {
-  final String id;
-  final String artistId;
-  final String audioUrl;
-  final String country;
-  final int? duration;
-  final String songImageUrl;
-  final String songName;
-  final int year;
-
-  Song({
-    required this.id,
-    required this.artistId,
-    required this.audioUrl,
-    required this.country,
-    this.duration,
-    required this.songImageUrl,
-    required this.songName,
-    required this.year,
-  });
-
-  factory Song.fromFirestore(DocumentSnapshot doc) {
-    try {
-      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-      
-      return Song(
-        id: doc.id,
-        artistId: data['artist_id']?.toString() ?? '',
-        audioUrl: data['audio_url']?.toString() ?? '',
-        country: data['country']?.toString() ?? '',
-        duration: data['duration'] is int ? data['duration'] : null,
-        songImageUrl: data['song_imageUrl']?.toString() ?? '',
-        songName: data['song_name']?.toString() ?? 'Không có tên',
-        year: data['year'] is int ? data['year'] : 0,
-      );
-    } catch (e) {
-      return Song(
-        id: doc.id,
-        artistId: '',
-        audioUrl: '',
-        country: '',
-        duration: null,
-        songImageUrl: '',
-        songName: 'Lỗi tải dữ liệu',
-        year: 0,
-      );
-    }
-  }
-}
-
 class PlaylistsTab extends StatefulWidget {
   @override
   _PlaylistsTabState createState() => _PlaylistsTabState();
 }
 
 class _PlaylistsTabState extends State<PlaylistsTab> {
+  StreamSubscription? _playerStateSub;
+  StreamSubscription? _durationSub;
+  StreamSubscription? _positionSub;
+  StreamSubscription? _playerCompleteSub;
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final MusicController _controller = MusicController();
   
-  List<Song> _songs = [];
+  List<SongModel> _songs = [];
   bool _isLoading = true;
-  Song? _currentPlayingSong;
+  SongModel? _currentPlayingSong;
   bool _isPlaying = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
@@ -83,59 +40,72 @@ class _PlaylistsTabState extends State<PlaylistsTab> {
 
   @override
   void dispose() {
+    _playerStateSub?.cancel();
+    _durationSub?.cancel();
+    _positionSub?.cancel();
+    _playerCompleteSub?.cancel();
+
     _audioPlayer.dispose();
     super.dispose();
   }
 
+
   void _initializeAudioPlayer() {
-    _audioPlayer.onPlayerStateChanged.listen((PlayerState state) {
-      setState(() {
-        _isPlaying = state == PlayerState.playing;
-      });
+    _playerStateSub = _audioPlayer.onPlayerStateChanged.listen((PlayerState state) {
+      if (mounted) {
+        setState(() {
+          _isPlaying = state == PlayerState.playing;
+        });
+      }
     });
 
-    _audioPlayer.onDurationChanged.listen((Duration duration) {
-      setState(() {
-        _duration = duration;
-      });
+    _durationSub = _audioPlayer.onDurationChanged.listen((duration) {
+      if (mounted) {
+        setState(() {
+          _duration = duration;
+        });
+      }
     });
 
-    _audioPlayer.onPositionChanged.listen((Duration position) {
-      setState(() {
-        _position = position;
-      });
+    _positionSub = _audioPlayer.onPositionChanged.listen((position) {
+      if (mounted) {
+        setState(() {
+          _position = position;
+        });
+      }
     });
 
-    _audioPlayer.onPlayerComplete.listen((event) {
-      setState(() {
-        _isPlaying = false;
-        _currentPlayingSong = null;
-        _position = Duration.zero;
-      });
+    _playerCompleteSub = _audioPlayer.onPlayerComplete.listen((event) {
+      if (mounted) {
+        setState(() {
+          _isPlaying = false;
+          _currentPlayingSong = null;
+          _position = Duration.zero;
+        });
+      }
     });
   }
+
 
   Future<void> _loadSongs() async {
     try {
       QuerySnapshot snapshot = await _firestore.collection('songs').get();
       
       setState(() {
-       final controller = MusicController();
-_songs = snapshot.docs.map((doc) {
-  final song = Song.fromFirestore(doc);
-  final convertedUrl = controller.convertDriveLink(song.audioUrl);
-  return Song(
-    id: song.id,
-    artistId: song.artistId,
-    audioUrl: convertedUrl,
-    country: song.country,
-    duration: song.duration,
-    songImageUrl: song.songImageUrl,
-    songName: song.songName,
-    year: song.year,
-  );
-}).toList();
-
+        _songs = snapshot.docs.map((doc) {
+          final song = SongModel.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+          // Convert drive link if needed
+          return SongModel(
+            id: song.id,
+            artistIds: song.artistIds,
+            name: song.name,
+            linkMp3: _controller.convertDriveLink(song.linkMp3),
+            imageUrl: song.imageUrl,
+            loveCount: song.loveCount,
+            playCount: song.playCount,
+            year: song.year,
+          );
+        }).toList();
         _isLoading = false;
       });
       
@@ -145,36 +115,20 @@ _songs = snapshot.docs.map((doc) {
       });
       
       if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Lỗi kết nối'),
-            content: Text('Không thể tải dữ liệu từ Firebase: ${e.toString()}'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _loadSongs();
-                },
-                child: Text('Thử lại'),
-              ),
-            ],
-          ),
-        );
+        _showErrorDialog('Không thể tải dữ liệu từ Firebase: ${e.toString()}', () => _loadSongs());
       }
     }
   }
 
-  Future<void> _playSong(Song song) async {
+  Future<void> _playSong(SongModel song) async {
     try {
-      if (song.audioUrl.isEmpty) {
+      if (song.linkMp3.isEmpty) {
         _showErrorDialog('Không có URL âm thanh cho bài hát này');
         return;
       }
-      
       if (_currentPlayingSong?.id != song.id) {
         await _audioPlayer.stop();
-        await _audioPlayer.play(UrlSource(song.audioUrl));
+        await _audioPlayer.play(UrlSource(song.linkMp3));
         setState(() {
           _currentPlayingSong = song;
         });
@@ -189,7 +143,7 @@ _songs = snapshot.docs.map((doc) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Đang phát: ${song.songName}'),
+            content: Text('Đang phát: ${song.name}'),
             duration: Duration(seconds: 2),
             backgroundColor: Color(MyColor.pr4),
           ),
@@ -201,13 +155,21 @@ _songs = snapshot.docs.map((doc) {
     }
   }
 
-  void _showErrorDialog(String message) {
+  void _showErrorDialog(String message, [VoidCallback? onRetry]) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Lỗi'),
         content: Text(message),
         actions: [
+          if (onRetry != null)
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                onRetry();
+              },
+              child: Text('Thử lại'),
+            ),
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text('OK'),
@@ -224,14 +186,9 @@ _songs = snapshot.docs.map((doc) {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Mini player nếu đang phát nhạc
           if (_currentPlayingSong != null) _buildMiniPlayer(),
-
-          // Songs from Firebase section
           _buildSongsFromFirebase(),
           SizedBox(height: 24),
-
-          // Nhạc đã nghe section
           ListenedMusicSection(),
         ],
       ),
@@ -262,7 +219,7 @@ _songs = snapshot.docs.map((doc) {
               SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Đang phát: ${_currentPlayingSong?.songName ?? ""}',
+                  'Đang phát: ${_currentPlayingSong?.name ?? ""}',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -306,39 +263,32 @@ _songs = snapshot.docs.map((doc) {
   }
 
   Widget _buildSongsFromFirebase() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (_isLoading)
-          Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(MyColor.pr4)),
-            ),
-          )
-        else if (_songs.isEmpty)
-          Center(
-            child: Text(
-              'Không có bài hát nào',
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 16,
-              ),
-            ),
-          )
-        else
-          ListView.builder(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            itemCount: _songs.length,
-            itemBuilder: (context, index) {
-              return _buildSongItem(_songs[index]);
-            },
-          ),
-      ],
+    if (_isLoading) {
+      return Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(MyColor.pr4)),
+        ),
+      );
+    }
+    
+    if (_songs.isEmpty) {
+      return Center(
+        child: Text(
+          'Không có bài hát nào',
+          style: TextStyle(color: Colors.grey, fontSize: 16),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      itemCount: _songs.length,
+      itemBuilder: (context, index) => _buildSongItem(_songs[index]),
     );
   }
 
-  Widget _buildSongItem(Song song) {
+  Widget _buildSongItem(SongModel song) {
     bool isCurrentSong = _currentPlayingSong?.id == song.id;
     bool isPlaying = isCurrentSong && _isPlaying;
     
@@ -373,38 +323,7 @@ _songs = snapshot.docs.map((doc) {
         ),
         child: Row(
           children: [
-            // Song image
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: song.songImageUrl.isNotEmpty
-                    ? Image.network(
-                        song.songImageUrl,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Center(
-                            child: CircularProgressIndicator(
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded / 
-                                    loadingProgress.expectedTotalBytes!
-                                  : null,
-                              strokeWidth: 2,
-                            ),
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          return _buildDefaultMusicIcon();
-                        },
-                      )
-                    : _buildDefaultMusicIcon(),
-              ),
-            ),
+            _buildSongImage(song),
             SizedBox(width: 15),
             Expanded(
               child: Column(
@@ -423,7 +342,7 @@ _songs = snapshot.docs.map((doc) {
                         ),
                       Expanded(
                         child: Text(
-                          song.songName,
+                          song.name,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -436,7 +355,7 @@ _songs = snapshot.docs.map((doc) {
                     ],
                   ),
                   Text(
-                    '${song.country} • ${song.year}',
+                    '${song.year}',
                     style: TextStyle(
                       fontSize: 14,
                       color: isCurrentSong 
@@ -448,26 +367,14 @@ _songs = snapshot.docs.map((doc) {
               ),
             ),
             GestureDetector(
-             onTap: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) =>MusicPlayerWithSwipeScreen(
-        song: SongModel(
-          id: song.id,
-          name: song.songName,
-          linkMp3: song.audioUrl,
-          imageUrl: song.songImageUrl,
-          artistIds: [song.artistId], // tạm thời lấy 1 ID, bạn có thể đổi
-          loveCount: 0,
-          playCount: 0,
-          year: song.year,
-        ),
-      ),
-    ),
-  );
-},
-
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MusicPlayerWithSwipeScreen(song: song),
+                  ),
+                );
+              },
               child: Container(
                 width: 40,
                 height: 40,
@@ -496,6 +403,38 @@ _songs = snapshot.docs.map((doc) {
     );
   }
 
+  Widget _buildSongImage(SongModel song) {
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: song.imageUrl.isNotEmpty
+            ? Image.network(
+                song.imageUrl,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded / 
+                            loadingProgress.expectedTotalBytes!
+                          : null,
+                      strokeWidth: 2,
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) => _buildDefaultMusicIcon(),
+              )
+            : _buildDefaultMusicIcon(),
+      ),
+    );
+  }
+
   Widget _buildDefaultMusicIcon() {
     return Container(
       decoration: BoxDecoration(
@@ -517,6 +456,4 @@ _songs = snapshot.docs.map((doc) {
       ),
     );
   }
-
-
 }

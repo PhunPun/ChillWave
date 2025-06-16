@@ -1,4 +1,5 @@
 // music_player_with_swipe_screen.dart
+import 'package:chillwave/controllers/music_controller.dart';
 import 'package:chillwave/pages/playmusicscreen/components/music_player_screen.dart';
 import 'package:chillwave/pages/playmusicscreen/components/music_playlist_screen.dart';
 import 'package:flutter/material.dart';
@@ -65,8 +66,17 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
     });
 
     _loadArtistNames();
+    _checkIfFavorite();
   }
-
+  void _checkIfFavorite() async {
+    final controller = MusicController();
+    final result = await controller.isFavoriteSong(widget.song.id);
+    if (mounted) {
+      setState(() {
+        isFavorite = result;
+      });
+    }
+  }
   void _loadArtistNames() {
     if (widget.song.artistIds.isNotEmpty) {
       List<String> flattenedIds = [];
@@ -149,6 +159,7 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: Color(MyColor.white),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -192,10 +203,15 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
             artistNames: artistNames,
             formatDuration: _formatDuration,
             togglePlayPause: _togglePlayPause,
-            toggleFavorite: () {
-              setState(() {
-                isFavorite = !isFavorite;
-              });
+            toggleFavorite: () async {
+              final controller = MusicController();
+              await controller.toggleFavoriteSong(widget.song);
+              final result = await controller.isFavoriteSong(widget.song.id);
+              if (mounted) {
+                setState(() {
+                  isFavorite = result;
+                });
+              }
             },
             onSeek: (value) async {
               final newPos = Duration(seconds: value.toInt());
