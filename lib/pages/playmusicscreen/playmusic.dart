@@ -1,12 +1,17 @@
 // music_player_with_swipe_screen.dart
+import 'package:chillwave/controllers/artist_controller.dart';
 import 'package:chillwave/controllers/music_controller.dart';
+import 'package:chillwave/controllers/playlist_controller.dart';
 import 'package:chillwave/pages/playmusicscreen/components/music_player_screen.dart';
 import 'package:chillwave/pages/playmusicscreen/components/music_playlist_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:chillwave/models/song_model.dart';
 import '../../themes/colors/colors.dart';
+import '../../controllers/player_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MusicPlayerWithSwipeScreen extends StatefulWidget {
   final SongModel song;
@@ -24,9 +29,10 @@ class MusicPlayerWithSwipeScreen extends StatefulWidget {
 
 class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
     with SingleTickerProviderStateMixin {
-  late AudioPlayer _audioPlayer;
+  
   late AnimationController _rotationController;
   late PageController _pageController;
+  final PlayerController _playerController = PlayerController();
   
   double _currentAngle = 0.0;
   bool isPlaying = true;
@@ -35,11 +41,11 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
   Duration _position = Duration.zero;
   List<String> artistNames = [];
   int _currentPageIndex = 0;
+  List<String> playedSongIds = [];
 
   @override
   void initState() {
     super.initState();
-    _audioPlayer = AudioPlayer();
     _pageController = PageController();
     _rotationController = AnimationController(
       vsync: this,
@@ -55,19 +61,69 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
     });
 
     _rotationController.repeat();
-    _audioPlayer.play(UrlSource(widget.song.linkMp3));
+    
+    // Sử dụng PlayerController để phát nhạc
+    _playSafe();
+    // Tăng play_count khi bắt đầu phát nhạc
+    MusicController().incrementPlayCount(widget.song.id);
 
-    _audioPlayer.onDurationChanged.listen((d) {
-      setState(() => _duration = d);
+    _initPlayedSongIds();
+
+    _playerController.audioPlayer.onDurationChanged.listen((d) {
+      if (mounted) {
+        setState(() => _duration = d);
+      }
     });
 
-    _audioPlayer.onPositionChanged.listen((p) {
-      setState(() => _position = p);
+    _playerController.audioPlayer.onPositionChanged.listen((p) {
+      if (mounted) {
+        setState(() => _position = p);
+      }
     });
 
     _loadArtistNames();
     _checkIfFavorite();
+    _addToPlayHistory(widget.song.id); // chỉ update Firestore
   }
+
+  Future<void> _loadPlayedSongIds() async {
+    final prefs = await SharedPreferences.getInstance();
+    playedSongIds = prefs.getStringList('playedSongIds') ?? [];
+  }
+
+  Future<void> _savePlayedSongIds() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('playedSongIds', playedSongIds);
+  }
+
+  Future<void> _initPlayedSongIds() async {
+    await _loadPlayedSongIds();
+    if (playedSongIds.isEmpty) {
+      setState(() {
+        playedSongIds = [widget.song.id];
+      });
+      await _savePlayedSongIds();
+    } else {
+      if (!playedSongIds.contains(widget.song.id)) {
+        setState(() {
+          playedSongIds.add(widget.song.id);
+        });
+        await _savePlayedSongIds();
+      }
+      // Nếu đã có thì giữ nguyên thứ tự, không xóa/thêm lại
+    }
+  }
+
+  void _addToPlayedSongIds(String songId) async {
+    if (!playedSongIds.contains(songId)) {
+      setState(() {
+        playedSongIds.add(songId);
+      });
+      await _savePlayedSongIds();
+    }
+    // Nếu đã có thì không làm gì
+  }
+
   void _checkIfFavorite() async {
     final controller = MusicController();
     final result = await controller.isFavoriteSong(widget.song.id);
@@ -77,6 +133,7 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
       });
     }
   }
+
   void _loadArtistNames() {
     if (widget.song.artistIds.isNotEmpty) {
       List<String> flattenedIds = [];
@@ -129,10 +186,35 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
     }
   }
 
+  Future<void> _addToPlayHistory(String songId) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId != null) {
+      final playHistoryRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('play_history');
+      // Tìm document có song_id == songId
+      final query = await playHistoryRef.where('song_id', isEqualTo: songId).limit(1).get();
+      if (query.docs.isNotEmpty) {
+        // Đã có, chỉ update played_at
+        await playHistoryRef.doc(query.docs.first.id).update({
+          'played_at': FieldValue.serverTimestamp(),
+        });
+      } else {
+        // Chưa có, thêm mới
+        await playHistoryRef.add({
+          'song_id': songId,
+          'played_at': FieldValue.serverTimestamp(),
+        });
+      }
+      // Sau khi thêm/cập nhật, load lại playedSongIds
+      await _initPlayedSongIds();
+    }
+  }
+
   @override
   void dispose() {
     _rotationController.dispose();
-    _audioPlayer.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -147,10 +229,10 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
     setState(() {
       isPlaying = !isPlaying;
       if (isPlaying) {
-        _audioPlayer.resume();
+        _playerController.resume();
         _rotationController.repeat();
       } else {
-        _audioPlayer.pause();
+        _playerController.pause();
         _rotationController.stop(canceled: false);
       }
     });
@@ -179,10 +261,91 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
         ),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: Icon(Icons.more_horiz, color: Color(MyColor.black)),
-            onPressed: () {},
-          ),
+          PopupMenuButton<String>(
+            padding: const EdgeInsets.all(0),
+            icon: const Icon(Icons.more_vert),
+            color: Colors.transparent,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: BorderSide(color: Color(MyColor.pr5), width: 1.0),
+            ),
+            onSelected: (value) async {
+              if (value == 'favorite') {
+                try {
+                  await ArtistController.saveFavoriteSongs({widget.song.id});
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Đã thêm vào yêu thích!'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Có lỗi xảy ra: $e'),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
+              } else if (value == 'playlist') {
+                _showPlaylistDialog(context, widget.song.id);
+              } else if (value == 'like_artist') {
+                try {
+                  await ArtistController.saveFavoriteArtists({...widget.song.artistIds});
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Đã thêm vào yêu thích!'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Có lỗi xảy ra: $e'),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              PopupMenuItem<String>(
+                value: 'playlist',
+                height: 38, // Giảm chiều cao
+                padding: const EdgeInsets.symmetric(horizontal: 2,),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Color(MyColor.pr4), // Màu nền riêng
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  child: const Text(
+                    '➕ Thêm vào danh sách',
+                    style: TextStyle(color: Color(MyColor.se5)),
+                  ),
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'like_artist',
+                height: 38, // Giảm chiều cao
+                padding: const EdgeInsets.symmetric(horizontal: 2,),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Color(MyColor.pr5), // Màu nền riêng
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  child: const Text(
+                    '🎤 Thích nghệ sĩ',
+                    style: TextStyle(color: Color(MyColor.se5)),
+                  ),
+                ),
+              ),
+            ],
+          )
         ],
       ),
       body: PageView(
@@ -215,8 +378,10 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
             },
             onSeek: (value) async {
               final newPos = Duration(seconds: value.toInt());
-              await _audioPlayer.seek(newPos);
+              await _playerController.audioPlayer.seek(newPos);
             },
+            onNext: _handleNext,
+            onPrev: _handlePrev,
           ),
           MusicPlaylistScreen(
             song: widget.song,
@@ -225,171 +390,181 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
           ),
         ],
       ),
-      // Bottom player - chỉ hiện ở playlist screen (page index 1)
-      bottomNavigationBar: _currentPageIndex == 1 ? Container(
-        height: 120,
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: Color(MyColor.white),
-        ),
-        child: Column(
-          children: [
-            // Thanh progress với slider có thể tương tác
-            SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: Color(MyColor.pr4),
-                inactiveTrackColor: Color(MyColor.se1),
-                thumbColor: Color(MyColor.pr4),
-                thumbShape: RoundSliderThumbShape(enabledThumbRadius: 4),
-                trackHeight: 2,
-                overlayShape: RoundSliderOverlayShape(overlayRadius: 8),
-              ),
-              child: Slider(
-                min: 0,
-                max: _duration.inSeconds.toDouble(),
-                value: _position.inSeconds.clamp(0, _duration.inSeconds).toDouble(),
-                onChanged: (value) async {
-                  final newPos = Duration(seconds: value.toInt());
-                  await _audioPlayer.seek(newPos);
-                },
-              ),
-            ),
-            // Hiển thị thời gian thực
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    );
+  }
+
+  void _handleNext() async {
+    _playerController.stop();
+    await _loadPlayedSongIds();
+    print('playedSongIds (NEXT): ' + playedSongIds.toString());
+    int currentIdx = playedSongIds.lastIndexOf(widget.song.id);
+    if (currentIdx < playedSongIds.length - 1) {
+      final nextSongId = playedSongIds[currentIdx + 1];
+      final songDoc = await FirebaseFirestore.instance.collection('songs').doc(nextSongId).get();
+      if (songDoc.exists) {
+        final musicController = MusicController();
+        final data = songDoc.data() as Map<String, dynamic>;
+        data['audio_url'] = musicController.convertDriveLink(data['audio_url'] ?? '');
+        final nextSong = SongModel.fromMap(songDoc.id, data);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MusicPlayerWithSwipeScreen(song: nextSong),
+          ),
+        );
+        return;
+      }
+    } else {
+      // Nếu đang ở cuối queue, random bài mới
+      final snapshot = await FirebaseFirestore.instance.collection('songs').get();
+      final musicController = MusicController();
+      final allSongs = snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        data['audio_url'] = musicController.convertDriveLink(data['audio_url'] ?? '');
+        return SongModel.fromMap(doc.id, data);
+      }).toList();
+      allSongs.removeWhere((s) => s.id == widget.song.id);
+      if (allSongs.isNotEmpty) {
+        allSongs.shuffle();
+        final nextSong = allSongs.first;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MusicPlayerWithSwipeScreen(song: nextSong),
+          ),
+        );
+      }
+    }
+  }
+
+  void _handlePrev() async {
+    _playerController.stop();
+    await _loadPlayedSongIds();
+    print('playedSongIds (PREV): ' + playedSongIds.toString());
+    int currentIdx = playedSongIds.lastIndexOf(widget.song.id);
+    if (currentIdx > 0) {
+      final prevSongId = playedSongIds[currentIdx - 1];
+      final songDoc = await FirebaseFirestore.instance.collection('songs').doc(prevSongId).get();
+      if (songDoc.exists) {
+        final musicController = MusicController();
+        final data = songDoc.data() as Map<String, dynamic>;
+        data['audio_url'] = musicController.convertDriveLink(data['audio_url'] ?? '');
+        final prevSong = SongModel.fromMap(songDoc.id, data);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MusicPlayerWithSwipeScreen(song: prevSong),
+          ),
+        );
+        return;
+      }
+    }
+    // Nếu index = 0 thì không cho prev (không làm gì)
+  }
+
+  Future<void> _playSafe() async {
+    final ok = await _playerController.play(
+      url: widget.song.linkMp3,
+      songName: widget.song.name,
+      artistName: widget.song.artistIds.join(", "),
+      imageUrl: widget.song.imageUrl,
+    );
+    if (!ok && mounted) {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không thể phát nhạc: Link nhạc lỗi hoặc không tồn tại!')),
+      );
+    }
+  }
+  void _showPlaylistDialog(BuildContext context, String songId) async {
+    final playlists = await PlaylistController.getUserPlaylists();
+    final TextEditingController nameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Color(MyColor.pr1),
+          title: const Text(
+            'Chọn playlist', 
+            style: TextStyle(
+              color: Color(MyColor.se2), 
+              fontWeight: FontWeight.bold
+            ),),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
+                  if (playlists.isNotEmpty)
+                    ...playlists.map((playlist) => ListTile(
+                          tileColor: Color(MyColor.pr2), // Thêm màu nền cho ListTile
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          title: Text(
+                            playlist.name,
+                            style: const TextStyle(
+                              color: Color(MyColor.pr6),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          onTap: () async {
+                            await ArtistController.saveSongToPlaylist(
+                              playlistId: playlist.id,
+                              songId: songId,
+                            );
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Đã thêm vào playlist!')),
+                            );
+                          },
+                        )),
+                  const SizedBox(height: 8),
                   Text(
-                    _formatDuration(_position),
+                    'Hoặc',
                     style: TextStyle(
-                      fontSize: 12,
-                      color: Color(MyColor.grey),
-                      fontWeight: FontWeight.w500,
+                      color: Color(MyColor.se5),
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  Text(
-                    _formatDuration(_duration),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Color(MyColor.grey),
-                      fontWeight: FontWeight.w500,
+                  SizedBox(
+                    height: 40,
+                    child: TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        hintText: 'Nhập tên playlist mới',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () async {
+                      final newPlaylistName = nameController.text.trim();
+                      if (newPlaylistName.isNotEmpty) {
+                        await ArtistController.saveSongToPlaylist(
+                          playlistId: null,
+                          songId: songId,
+                          playlistName: newPlaylistName,
+                        );
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Đã tạo playlist và thêm bài hát!')),
+                        );
+                      }
+                    },
+                    child: const Text(
+                      'Tạo mới & Thêm',
+                      style: TextStyle(color: Color(MyColor.pr5))
                     ),
                   ),
                 ],
               ),
             ),
-            SizedBox(height: 8),
-            // Control buttons row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Thông tin bài hát
-                Expanded(
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: Image.network(
-                          widget.song.imageUrl,
-                          width: 40,
-                          height: 40,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container(
-                                width: 40,
-                                height: 40,
-                                color: Color(MyColor.se1),
-                                child: Icon(Icons.music_note, size: 16),
-                              ),
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              widget.song.name,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Color(MyColor.black),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              artistNames.isNotEmpty ? artistNames.join(', ') : 'Loading...',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Color(MyColor.grey),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                // Control buttons
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.shuffle, color: Color(MyColor.grey), size: 20),
-                      onPressed: () {},
-                      padding: EdgeInsets.all(4),
-                      constraints: BoxConstraints(minWidth: 32, minHeight: 32),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.skip_previous, color: Color(MyColor.black), size: 24),
-                      onPressed: () {},
-                      padding: EdgeInsets.all(4),
-                      constraints: BoxConstraints(minWidth: 32, minHeight: 32),
-                    ),
-                    // Play/Pause button
-                    Container(
-                      width: 40,
-                      height: 40,
-                      margin: EdgeInsets.symmetric(horizontal: 8),
-                      decoration: BoxDecoration(
-                        color: Color(MyColor.pr4),
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                          isPlaying ? Icons.pause : Icons.play_arrow,
-                          color: Color(MyColor.white),
-                          size: 20,
-                        ),
-                        onPressed: _togglePlayPause,
-                        padding: EdgeInsets.zero,
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.skip_next, color: Color(MyColor.black), size: 24),
-                      onPressed: () {},
-                      padding: EdgeInsets.all(4),
-                      constraints: BoxConstraints(minWidth: 32, minHeight: 32),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.repeat, color: Color(MyColor.grey), size: 20),
-                      onPressed: () {},
-                      padding: EdgeInsets.all(4),
-                      constraints: BoxConstraints(minWidth: 32, minHeight: 32),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
-      ) : null,
+          ),
+        );
+      },
     );
   }
 }

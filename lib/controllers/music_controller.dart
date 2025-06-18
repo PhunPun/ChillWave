@@ -213,8 +213,16 @@ class MusicController {
 
     if (alreadyFavorite) {
       currentList.remove(song.id);
+      // Giảm love_count
+      await FirebaseFirestore.instance.collection('songs').doc(song.id).update({
+        'love_count': FieldValue.increment(-1),
+      });
     } else {
       currentList.add(song.id);
+      // Tăng love_count
+      await FirebaseFirestore.instance.collection('songs').doc(song.id).update({
+        'love_count': FieldValue.increment(1),
+      });
     }
 
     await targetDoc.set({
@@ -225,5 +233,9 @@ class MusicController {
     }, SetOptions(merge: true));
   }
 
-
+  Future<void> incrementPlayCount(String songId) async {
+    await FirebaseFirestore.instance.collection('songs').doc(songId).update({
+      'play_count': FieldValue.increment(1),
+    });
+  }
 }

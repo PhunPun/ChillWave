@@ -70,6 +70,13 @@ class ArtistController {
           'created_at': FieldValue.serverTimestamp(),
         });
       }
+      // Tăng love_count cho từng artist
+      for (final artistId in artistIds) {
+        final artistDoc = _artistRef.doc(artistId);
+        await artistDoc.update({
+          'love_count': FieldValue.increment(1),
+        });
+      }
     } catch (e) {
       rethrow;
     }
@@ -105,6 +112,12 @@ class ArtistController {
           'song_id': songIds,
           'categories': 'songs',
           'created_at': FieldValue.serverTimestamp(),
+        });
+      }
+      for (final songId in songIds) {
+        final songDoc = _firestore.collection('songs').doc(songId);
+        await songDoc.update({
+          'love_count': FieldValue.increment(1),
         });
       }
     } catch (e) {
