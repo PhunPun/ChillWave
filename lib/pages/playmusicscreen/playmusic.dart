@@ -1,7 +1,9 @@
 // music_player_with_swipe_screen.dart
 import 'package:chillwave/controllers/artist_controller.dart';
 import 'package:chillwave/controllers/music_controller.dart';
+import 'package:chillwave/controllers/music_state_provider.dart';
 import 'package:chillwave/controllers/playlist_controller.dart';
+import 'package:chillwave/pages/home/home_center.dart';
 import 'package:chillwave/pages/playmusicscreen/components/music_player_screen.dart';
 import 'package:chillwave/pages/playmusicscreen/components/music_playlist_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:chillwave/models/song_model.dart';
+import 'package:provider/provider.dart';
 import '../../themes/colors/colors.dart';
 import '../../controllers/player_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -84,6 +87,11 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
     _loadArtistNames();
     _checkIfFavorite();
     _addToPlayHistory(widget.song.id); // chỉ update Firestore
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final stateProvider = context.read<MusicStateProvider>();
+      stateProvider.setCurrentSong(widget.song);
+      stateProvider.setCurrentPlaylist(widget.playlist);
+    });
   }
 
   Future<void> _loadPlayedSongIds() async {

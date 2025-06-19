@@ -1,11 +1,15 @@
+import 'package:chillwave/controllers/music_state_provider.dart';
+import 'package:chillwave/models/song_model.dart';
 import 'package:chillwave/pages/home/home_page.dart';
 import 'package:chillwave/pages/library/page_library.dart';
 import 'package:chillwave/pages/profile/user_profile_page.dart';
 import 'package:chillwave/pages/search/search_page.dart';
 import 'package:flutter/material.dart';
+import 'package:chillwave/widgets/mini_player.dart';
+import 'package:provider/provider.dart';
 
 class HomeCenter extends StatefulWidget {
-  const HomeCenter({super.key});
+  const HomeCenter({super.key,});
 
   @override
   State<HomeCenter> createState() => _HomeCenterState();
@@ -26,13 +30,34 @@ class _HomeCenterState extends State<HomeCenter> {
       _selectedIndex = index;
     });
   }
+  void refreshMiniPlayer() {
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
+    final song = context.watch<MusicStateProvider>().currentSong;
+    final playlist = context.watch<MusicStateProvider>().currentPlaylist;
+    if (song != null) {
+      print("cjbdhvb MiniPlayer đang chơi: ${song.name}");
+    }else{
+      print('aaaaaaaaaaabnhbdc');
+    }
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
+      body: Stack(
+        children: [
+          IndexedStack(
+            index: _selectedIndex,
+            children: _pages,
+          ),
+          if (song != null)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 70, // Để MiniPlayer nằm trên BottomNavigationBar
+              child: MiniPlayer(song: song, playlist: playlist),
+            ),
+        ],
       ),
       bottomNavigationBar: SafeArea(
         top: false, // chỉ tránh phía dưới
