@@ -244,6 +244,7 @@ class _MiniPlayerState extends State<MiniPlayer>
 
   @override
   Widget build(BuildContext context) {
+    if(widget.song.name.isNotEmpty) {print('ssssssssssssss'+widget.song.name);}
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -257,8 +258,8 @@ class _MiniPlayerState extends State<MiniPlayer>
         );
       },
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal:8, vertical: 10),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [Color(0xFF6A85B6), Color(0xFFBC6EC7)],
@@ -281,20 +282,21 @@ class _MiniPlayerState extends State<MiniPlayer>
             ClipOval(
               child: Image.network(
                 widget.song.imageUrl,
-                width: 64,
-                height: 64,
+                width: 40,
+                height: 40,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => Container(
-                  width: 64,
-                  height: 64,
+                  width: 40,
+                  height: 40,
                   color: Colors.grey[300],
                   child: const Icon(Icons.music_note, size: 32, color: Colors.white),
                 ),
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 8),
             // Thông tin bài hát
             Expanded(
+              flex: 2,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -303,7 +305,7 @@ class _MiniPlayerState extends State<MiniPlayer>
                     widget.song.name,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 22,
+                      fontSize: 16,
                       color: Colors.white,
                       shadows: [Shadow(blurRadius: 2, color: Colors.black26)],
                     ),
@@ -314,7 +316,7 @@ class _MiniPlayerState extends State<MiniPlayer>
                   Text(
                     artistNames.isNotEmpty ? artistNames.join(", ") : "",
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 12,
                       color: Colors.white70,
                     ),
                     maxLines: 1,
@@ -324,42 +326,55 @@ class _MiniPlayerState extends State<MiniPlayer>
               ),
             ),
             // Các nút điều khiển
-            Row(
-              children: [
-                IconButton(
-                  icon: Icon(
-                    isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: Colors.white,
-                    size: 30,
+            Expanded(
+              flex: 3,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // Yêu thích
+                  InkWell(
+                    onTap: () async {
+                      final controller = MusicController();
+                      await controller.toggleFavoriteSong(widget.song);
+                      _checkIfFavorite();
+                    },
+                    child: Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
-                  onPressed: () async {
-                    final controller = MusicController();
-                    await controller.toggleFavoriteSong(widget.song);
-                    _checkIfFavorite();
-                  },
-                  tooltip: 'Yêu thích',
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.skip_previous, color: Colors.white, size: 32),
-                  onPressed: _handlePrev,
-                  tooltip: 'Bài trước',
-                ),
-                IconButton(
-                  icon: Icon(
-                    isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
-                    color: Colors.white,
-                    size: 38,
+
+                  // Bài trước
+                  InkWell(
+                    onTap: _handlePrev,
+                    child: const Icon(
+                      Icons.skip_previous,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
-                  onPressed: _togglePlayPause,
-                  tooltip: isPlaying ? 'Tạm dừng' : 'Phát',
-                ),
-                IconButton(
-                  icon: const Icon(Icons.skip_next, color: Colors.white, size: 32),
-                  onPressed: _handleNext,
-                  tooltip: 'Bài tiếp',
-                ),
-              ],
+                  // Phát / Tạm dừng
+                  InkWell(
+                    onTap: _togglePlayPause,
+                    child: Icon(
+                      isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                  ),
+
+                  // Bài tiếp
+                  InkWell(
+                    onTap: _handleNext,
+                    child: const Icon(
+                      Icons.skip_next,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

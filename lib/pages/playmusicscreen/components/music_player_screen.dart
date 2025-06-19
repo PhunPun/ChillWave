@@ -137,10 +137,8 @@ class MusicPlayerScreen extends StatelessWidget {
                         ),
                         child: Slider(
                           min: 0,
-                          max: duration.inSeconds.toDouble(),
-                          value: position.inSeconds
-                              .clamp(0, duration.inSeconds)
-                              .toDouble(),
+                          max: duration.inSeconds > 0 ? duration.inSeconds.toDouble() : 1, // ✅ tránh lỗi 0
+                          value: position.inSeconds.clamp(0, duration.inSeconds > 0 ? duration.inSeconds : 1).toDouble(),
                           onChanged: onSeek,
                         ),
                       ),

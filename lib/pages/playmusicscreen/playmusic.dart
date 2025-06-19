@@ -65,8 +65,8 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
 
     _rotationController.repeat();
     
-    // Sử dụng PlayerController để phát nhạc
-    _playSafe();
+    _playSafe(); // ✅ Chỉ gọi nếu khác bài
+      
     // Tăng play_count khi bắt đầu phát nhạc
     MusicController().incrementPlayCount(widget.song.id);
 
@@ -92,6 +92,14 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
       stateProvider.setCurrentSong(widget.song);
       stateProvider.setCurrentPlaylist(widget.playlist);
     });
+    if (_duration.inSeconds == 0) {
+      print("⏱️ Duration chưa có, yêu cầu lại");
+      _playerController.audioPlayer.getDuration().then((d) {
+        if (mounted && d != null) {
+          setState(() => _duration = d);
+        }
+      });
+    }
   }
 
   Future<void> _loadPlayedSongIds() async {
@@ -471,19 +479,35 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
   }
 
   Future<void> _playSafe() async {
+    // Nếu đã phát rồi, KHÔNG gọi lại play nữa
+    if (_playerController.currentUrl == widget.song.linkMp3) {
+      print("✅ Bài hát đã đang phát, không cần play lại");
+      setState(() {
+        isPlaying = true;
+      });
+      return;
+    }
+
     final ok = await _playerController.play(
       url: widget.song.linkMp3,
       songName: widget.song.name,
       artistName: widget.song.artistIds.join(", "),
       imageUrl: widget.song.imageUrl,
+      songModel: widget.song,
     );
+
     if (!ok && mounted) {
-      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Không thể phát nhạc: Link nhạc lỗi hoặc không tồn tại!')),
+        const SnackBar(content: Text('Không thể phát nhạc: Link lỗi hoặc không tồn tại')),
       );
     }
+
+    setState(() {
+      isPlaying = true;
+    });
   }
+
+
   void _showPlaylistDialog(BuildContext context, String songId) async {
     final playlists = await PlaylistController.getUserPlaylists();
     final TextEditingController nameController = TextEditingController();

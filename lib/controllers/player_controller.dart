@@ -1,8 +1,11 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:chillwave/models/song_model.dart';
+import 'package:flutter/material.dart';
 
 class PlayerController {
   static final PlayerController _instance = PlayerController._internal();
   factory PlayerController() => _instance;
+  ValueNotifier<SongModel?> currentSongNotifier = ValueNotifier(null);
 
   final AudioPlayer _audioPlayer = AudioPlayer();
   String? currentSongName;
@@ -20,26 +23,27 @@ class PlayerController {
     required String songName,
     required String artistName,
     required String imageUrl,
+    SongModel? songModel,
   }) async {
-    if (url.isEmpty) {
-      print('Lỗi: Link nhạc rỗng!');
-      return false;
-    }
+    if (url.isEmpty) return false;
+
     try {
-      if (currentUrl != url) {
-        currentUrl = url;
-        currentSongName = songName;
-        currentArtistName = artistName;
-        currentImageUrl = imageUrl;
-        await _audioPlayer.setSource(UrlSource(url));
-      }
+      currentUrl = url;
+      currentSongName = songName;
+      currentArtistName = artistName;
+      currentImageUrl = imageUrl;
+
+      // ✅ Luôn gọi lại setSource để đảm bảo duration cập nhật
+      print("🎧 Forcing setSource with $url");
+      await _audioPlayer.setSource(UrlSource(url));
       await _audioPlayer.resume();
       return true;
     } catch (e) {
-      print('Lỗi phát nhạc: $e');
+      print('❌ Lỗi phát nhạc: $e');
       return false;
     }
   }
+
 
   void pause() => _audioPlayer.pause();
   void resume() => _audioPlayer.resume();

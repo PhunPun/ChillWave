@@ -54,7 +54,7 @@ class _HomeCenterState extends State<HomeCenter> {
             Positioned(
               left: 0,
               right: 0,
-              bottom: 70, // Để MiniPlayer nằm trên BottomNavigationBar
+              bottom: 0, // Để MiniPlayer nằm trên BottomNavigationBar
               child: MiniPlayer(song: song, playlist: playlist),
             ),
         ],
