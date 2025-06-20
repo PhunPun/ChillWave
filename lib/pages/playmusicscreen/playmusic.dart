@@ -45,6 +45,8 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
   List<String> artistNames = [];
   int _currentPageIndex = 0;
   List<String> playedSongIds = [];
+  Future<List<SongModel>>? _similarSongsFuture;
+  
 
 
   @override
@@ -121,6 +123,7 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
       stateProvider.setCurrentSong(widget.song);
       stateProvider.setCurrentPlaylist(widget.playlist);
     });
+    _similarSongsFuture = fetchSimilarSongs(widget.song);
   }
 
 
@@ -286,6 +289,47 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
     });
   }
 
+  Future<List<SongModel>> fetchSimilarSongs(SongModel currentSong) async {
+      final firestore = FirebaseFirestore.instance;
+      final allDocs = await firestore.collection('songs').get();
+
+      final Set<String> currentArtistIds = currentSong.artistIds.toSet();
+      final List<SongModel> similar = [];
+      final List<SongModel> fallback = [];
+
+      for (var doc in allDocs.docs) {
+        final data = doc.data();
+        final songId = doc.id;
+
+        if (songId.trim() == currentSong.id.trim()) continue; // ✅ Fix không lặp bài hiện tại
+
+        // ✅ Parse artistId linh hoạt
+        List<String> songArtistIds = [];
+        if (data['artist_id'] is List) {
+          songArtistIds = List<String>.from(data['artist_id']);
+        } else if (data['artist_id'] is String) {
+          final raw = data['artist_id'] as String;
+          songArtistIds = raw.replaceAll('[', '').replaceAll(']', '').split(',').map((s) => s.trim()).toList();
+        }
+
+        final song = SongModel.fromMap(songId, data);
+
+        // ✅ Nếu có ít nhất 1 nghệ sĩ trùng → thêm
+        if (currentArtistIds.any((id) => songArtistIds.contains(id))) {
+          similar.add(song);
+        } else {
+          fallback.add(song);
+        }
+      }
+
+      if (similar.isNotEmpty) {
+        return similar;
+      } else {
+        fallback.shuffle();
+        return fallback.take(4).toList();
+      }
+    }
+
 
   @override
   Widget build(BuildContext context) {
@@ -442,6 +486,7 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
             song: widget.song,
             playlist: widget.playlist,
             artistNames: artistNames,
+            similarSongsFuture: _similarSongsFuture,
           ),
         ],
       ),
