@@ -1,4 +1,6 @@
 // music_playlist_screen.dart
+import 'package:chillwave/controllers/artist_controller.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:chillwave/models/song_model.dart';
 import '../../../themes/colors/colors.dart';
@@ -17,6 +19,58 @@ class MusicPlaylistScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    
+    Future<List<SongModel>> fetchSimilarSongs(SongModel currentSong) async {
+      final firestore = FirebaseFirestore.instance;
+      final allDocs = await firestore.collection('songs').get();
+
+      final Set<String> currentArtistIds = currentSong.artistIds.toSet();
+      final List<SongModel> similar = [];
+      final List<SongModel> fallback = [];
+
+      for (var doc in allDocs.docs) {
+        final data = doc.data();
+        final songId = doc.id;
+
+        if (songId.trim() == currentSong.id.trim()) continue; // ✅ Fix không lặp bài hiện tại
+
+        // ✅ Parse artistId linh hoạt
+        List<String> songArtistIds = [];
+        if (data['artist_id'] is List) {
+          songArtistIds = List<String>.from(data['artist_id']);
+        } else if (data['artist_id'] is String) {
+          final raw = data['artist_id'] as String;
+          songArtistIds = raw.replaceAll('[', '').replaceAll(']', '').split(',').map((s) => s.trim()).toList();
+        }
+
+        final song = SongModel.fromMap(songId, data);
+
+        // ✅ Nếu có ít nhất 1 nghệ sĩ trùng → thêm
+        if (currentArtistIds.any((id) => songArtistIds.contains(id))) {
+          similar.add(song);
+        } else {
+          fallback.add(song);
+        }
+      }
+
+      if (similar.isNotEmpty) {
+        return similar;
+      } else {
+        fallback.shuffle();
+        return fallback.take(4).toList();
+      }
+    }
+
+    String formatNumberCompact(int number) {
+      if (number >= 1000000) {
+        return '${(number / 1000000).toStringAsFixed(1)}M';
+      } else if (number >= 1000) {
+        return '${(number / 1000).toStringAsFixed(1)}K';
+      } else {
+        return '$number';
+      }
+    }
+
     return Container(
       color: Color(MyColor.white),
       child: Column(
@@ -69,14 +123,14 @@ class MusicPlaylistScreen extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'Đã phát nổi bật',
+                        'Bài hát nổi bật',
                         style: TextStyle(
                           fontSize: 12,
                           color: Color(MyColor.grey),
                         ),
                       ),
                       Text(
-                        '2024',
+                        '${song.year}',
                         style: TextStyle(
                           fontSize: 12,
                           color: Color(MyColor.grey),
@@ -96,9 +150,9 @@ class MusicPlaylistScreen extends StatelessWidget {
               children: [
                 Icon(Icons.favorite_border, size: 20, color: Color(MyColor.grey)),
                 SizedBox(width: 4),
-                Text('214.2K', style: TextStyle(color: Color(MyColor.grey))),
+                Text(formatNumberCompact(song.loveCount), style: TextStyle(color: Color(MyColor.grey))),
                 Spacer(),
-                Text('6M', style: TextStyle(color: Color(MyColor.grey))),
+                Text(formatNumberCompact(song.playCount), style: TextStyle(color: Color(MyColor.grey))),
                 SizedBox(width: 4),
                 Icon(Icons.headphones, size: 20, color: Color(MyColor.grey)),
               ],
@@ -130,78 +184,113 @@ class MusicPlaylistScreen extends StatelessWidget {
           
           // Danh sách bài hát
           Expanded(
-            child: ListView.builder(
-              itemCount: playlist?.length ?? 3, // Default 3 items if no playlist
-              itemBuilder: (context, index) {
-                // Dữ liệu mẫu nếu không có playlist
-                final songs = playlist ?? [
-                  song, // Current song
-                  song, // Duplicate for demo
-                  song, // Duplicate for demo
-                ];
-                
-                return Container(
-                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Color(MyColor.pr4).withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: Image.network(
-                          songs[index].imageUrl,
-                          width: 50,
-                          height: 50,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container(
-                                width: 50,
-                                height: 50,
-                                color: Color(MyColor.se1),
-                                child: Icon(Icons.music_note, size: 20),
-                              ),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              songs[index].name,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Color(MyColor.black),
-                              ),
-                            ),
-                            Text(
-                              'Nghệ sĩ ${index + 1}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Color(MyColor.grey),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.play_arrow, color: Color(MyColor.pr4)),
-                        onPressed: () {
-                          // Handle play different song
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
+            child: playlist != null
+              ? ListView.builder(
+                  itemCount: playlist!.length,
+                  itemBuilder: (context, index) {
+                    final songItem = playlist![index];
+                    return buildSongTile(songItem, index);
+                  },
+                )
+              : FutureBuilder<List<SongModel>>(
+                  future: fetchSimilarSongs(song),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Lỗi khi tải bài hát tương tự'));
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Center(child: Text('Không tìm thấy bài hát tương tự'));
+                    }
+
+                    final similarSongs = snapshot.data!;
+                    return ListView.builder(
+                      itemCount: similarSongs.length,
+                      itemBuilder: (context, index) {
+                        final songItem = similarSongs[index];
+                        return buildSongTile(songItem, index);
+                      },
+                    );
+                  },
+                ),
+          )
+        ],
+      ),
+    );
+  }
+  Widget buildSongTile(SongModel songItem, int index) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Color(MyColor.pr4).withOpacity(0.05),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: Image.network(
+              songItem.imageUrl,
+              width: 50,
+              height: 50,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                width: 50,
+                height: 50,
+                color: Color(MyColor.se1),
+                child: Icon(Icons.music_note, size: 20),
+              ),
             ),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  songItem.name,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Color(MyColor.black),
+                  ),
+                ),
+                FutureBuilder<List<String>>(
+                  future: ArtistController.getArtistNamesByIds(songItem.artistIds),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Text(
+                        'Đang tải tên nghệ sĩ...',
+                        style: TextStyle(fontSize: 12, color: Color(MyColor.grey)),
+                      );
+                    } else if (snapshot.hasError || !snapshot.hasData) {
+                      return Text(
+                        'Không tìm được tên nghệ sĩ',
+                        style: TextStyle(fontSize: 12, color: Color(MyColor.grey)),
+                      );
+                    }
+
+                    final names = snapshot.data!;
+                    return Text(
+                      names.join(', '),
+                      style: TextStyle(fontSize: 12, color: Color(MyColor.grey)),
+                    );
+                  },
+                ),
+
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.play_arrow, color: Color(MyColor.pr4)),
+            onPressed: () {
+              // TODO: handle play this song
+            },
           ),
         ],
       ),
     );
   }
+
 }

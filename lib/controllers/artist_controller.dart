@@ -207,5 +207,35 @@ class ArtistController {
         .get();
     return snapshot.docs;
   }
+  static Future<String> getArtistNameById(String id) async {
+    try {
+      final doc = await _artistRef.doc(id).get();
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        return data['artist_name']?.toString().trim() ?? 'Không rõ tên';
+      } else {
+        return 'Không tìm thấy nghệ sĩ';
+      }
+    } catch (e) {
+      return 'Lỗi: $e';
+    }
+  }
+  static Future<List<String>> getArtistNamesByIds(List<String> ids) async {
+  try {
+    final snapshots = await Future.wait(
+      ids.map((id) => _artistRef.doc(id).get()),
+    );
+
+    return snapshots.map((doc) {
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        return data['artist_name']?.toString().trim() ?? 'Không rõ tên';
+      }
+      return 'Không tìm thấy nghệ sĩ';
+    }).toList();
+  } catch (e) {
+    return ['Lỗi: $e'];
+  }
+}
 
 }

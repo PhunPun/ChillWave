@@ -46,13 +46,15 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
   int _currentPageIndex = 0;
   List<String> playedSongIds = [];
 
+
   @override
   void initState() {
     super.initState();
+
     _pageController = PageController();
     _rotationController = AnimationController(
       vsync: this,
-      duration: Duration(seconds: 20),
+      duration: const Duration(seconds: 20),
     );
 
     _rotationController.addListener(() {
@@ -63,48 +65,71 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
       }
     });
 
-    _rotationController.repeat();
-    
-    _playSafe(); // ✅ Chỉ gọi nếu khác bài
-      
-    // Tăng play_count khi bắt đầu phát nhạc
-    MusicController().incrementPlayCount(widget.song.id);
+    // ✅ Đồng bộ trạng thái phát
+    final audioPlayer = _playerController.audioPlayer;
+    final state = audioPlayer.state;
 
+    setState(() {
+      isPlaying = (state == PlayerState.playing);
+      if (isPlaying) {
+        _rotationController.repeat();
+      } else {
+        _rotationController.stop();
+      }
+    });
+
+    // ✅ Đồng bộ thời gian nếu đang pause
+    audioPlayer.getCurrentPosition().then((p) {
+      if (mounted && p != null) {
+        setState(() {
+          _position = p;
+        });
+      }
+    });
+
+    audioPlayer.getDuration().then((d) {
+      if (mounted && d != null) {
+        setState(() {
+          _duration = d;
+        });
+      }
+    });
+
+    _playSafe(); // chỉ gọi nếu khác bài
+    MusicController().incrementPlayCount(widget.song.id);
     _initPlayedSongIds();
 
-    _playerController.audioPlayer.onDurationChanged.listen((d) {
-      if (mounted) {
+    // Tiếp tục lắng nghe stream
+    audioPlayer.onDurationChanged.listen((d) {
+      if (mounted && d.inMilliseconds > 0) {
         setState(() => _duration = d);
       }
     });
 
-    _playerController.audioPlayer.onPositionChanged.listen((p) {
-      if (mounted) {
+    audioPlayer.onPositionChanged.listen((p) {
+      if (mounted && _duration.inSeconds > 0) {
         setState(() => _position = p);
       }
     });
 
     _loadArtistNames();
     _checkIfFavorite();
-    _addToPlayHistory(widget.song.id); // chỉ update Firestore
+    _addToPlayHistory(widget.song.id);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final stateProvider = context.read<MusicStateProvider>();
       stateProvider.setCurrentSong(widget.song);
       stateProvider.setCurrentPlaylist(widget.playlist);
     });
-    if (_duration.inSeconds == 0) {
-      print("⏱️ Duration chưa có, yêu cầu lại");
-      _playerController.audioPlayer.getDuration().then((d) {
-        if (mounted && d != null) {
-          setState(() => _duration = d);
-        }
-      });
-    }
   }
+
+
+
 
   Future<void> _loadPlayedSongIds() async {
     final prefs = await SharedPreferences.getInstance();
     playedSongIds = prefs.getStringList('playedSongIds') ?? [];
+    print('====== $playedSongIds');
   }
 
   Future<void> _savePlayedSongIds() async {
@@ -242,6 +267,13 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
   }
 
   void _togglePlayPause() {
+    if (_duration.inSeconds == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Không thể phát: Link nhạc không hợp lệ')),
+      );
+      return;
+    }
+
     setState(() {
       isPlaying = !isPlaying;
       if (isPlaying) {
@@ -253,6 +285,7 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
       }
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -393,8 +426,14 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
               }
             },
             onSeek: (value) async {
-              final newPos = Duration(seconds: value.toInt());
-              await _playerController.audioPlayer.seek(newPos);
+              if (_duration.inSeconds > 0) {
+                final newPos = Duration(seconds: value.toInt());
+                await _playerController.audioPlayer.seek(newPos);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Không thể tua: chưa tải được độ dài bài hát')),
+                );
+              }
             },
             onNext: _handleNext,
             onPrev: _handlePrev,
@@ -479,15 +518,24 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
   }
 
   Future<void> _playSafe() async {
-    // Nếu đã phát rồi, KHÔNG gọi lại play nữa
+    // ✅ Nếu bài hát hiện tại đã được load → kiểm tra trạng thái thực tế
     if (_playerController.currentUrl == widget.song.linkMp3) {
-      print("✅ Bài hát đã đang phát, không cần play lại");
+      print("✅ Bài hát đã được phát, kiểm tra trạng thái thực tế");
+
+      final state = _playerController.audioPlayer.state;
       setState(() {
-        isPlaying = true;
+        isPlaying = (state == PlayerState.playing);
+        if (isPlaying) {
+          _rotationController.repeat();
+        } else {
+          _rotationController.stop();
+        }
       });
+
       return;
     }
 
+    // ✅ Nếu chưa phát → phát mới
     final ok = await _playerController.play(
       url: widget.song.linkMp3,
       songName: widget.song.name,
@@ -496,16 +544,28 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
       songModel: widget.song,
     );
 
-    if (!ok && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Không thể phát nhạc: Link lỗi hoặc không tồn tại')),
-      );
+    if (!ok) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('❌ Không thể phát nhạc: Link lỗi hoặc không tồn tại')),
+        );
+      }
+      setState(() {
+        isPlaying = false;
+        _rotationController.stop();
+        _duration = Duration.zero;
+        _position = Duration.zero;
+      });
+      return;
     }
 
     setState(() {
       isPlaying = true;
+      _rotationController.repeat();
     });
   }
+
+
 
 
   void _showPlaylistDialog(BuildContext context, String songId) async {

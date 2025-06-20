@@ -230,6 +230,13 @@ class _MiniPlayerState extends State<MiniPlayer>
   }
 
   void _togglePlayPause() {
+    if (_duration.inSeconds == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Không thể phát: Link nhạc không hợp lệ')),
+      );
+      return;
+    }
+
     setState(() {
       isPlaying = !isPlaying;
       if (isPlaying) {
@@ -241,6 +248,7 @@ class _MiniPlayerState extends State<MiniPlayer>
       }
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -454,18 +462,46 @@ class _MiniPlayerState extends State<MiniPlayer>
   }
 
   Future<void> _playSafe(SongModel song) async {
+    // Nếu đã phát bài này rồi, không phát lại
+    if (_playerController.currentUrl == song.linkMp3) {
+      print("✅ Đang phát bài này rồi, không phát lại.");
+      setState(() {
+        isPlaying = true;
+      });
+      return;
+    }
+
     final ok = await _playerController.play(
       url: song.linkMp3,
       songName: song.name,
       artistName: song.artistIds.join(", "),
       imageUrl: song.imageUrl,
     );
+
     if (!ok && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Không thể phát nhạc: Link nhạc lỗi hoặc không tồn tại!')),
+        const SnackBar(content: Text('❌ Không thể phát nhạc: Link nhạc lỗi hoặc không tồn tại!')),
       );
+
+      setState(() {
+        isPlaying = false;
+        _rotationController.stop();
+        _duration = Duration.zero;
+        _position = Duration.zero;
+      });
+
+      return; // ⛔ Dừng tại đây nếu play thất bại
     }
+
+    // Nếu phát thành công
+    setState(() {
+      isPlaying = true;
+      _rotationController.repeat();
+    });
+
+    print("▶️ Đang phát bài mới: ${song.name}");
   }
+
   void _showPlaylistDialog(BuildContext context, String songId) async {
     final playlists = await PlaylistController.getUserPlaylists();
     final TextEditingController nameController = TextEditingController();
