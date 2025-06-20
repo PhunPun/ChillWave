@@ -4,7 +4,7 @@ import 'package:chillwave/models/artist_model.dart';
 import 'package:chillwave/models/song_model.dart';
 import 'package:chillwave/themes/colors/colors.dart';
 import 'package:chillwave/widgets/gradient_wrapper.dart';
-import 'package:chillwave/widgets/skeleton/song_card_skeleton.dart';
+import 'package:chillwave/widgets/skeleton_search/song_card_skeleton.dart';
 import 'package:chillwave/widgets/song_card.dart';
 import 'package:flutter/material.dart';
 
