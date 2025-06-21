@@ -11,13 +11,15 @@ class PlaylistController {
     if (currentUser == null) {
       throw Exception('Chưa đăng nhập');
     }
+
     final snapshot = await _firestore
         .collection('users')
         .doc(currentUser.uid)
         .collection('playlists')
         .get();
-    return snapshot.docs
-        .map((doc) => PlaylistModel.fromMap(doc.data(), doc.id))
-        .toList();
+
+    return snapshot.docs.map((doc) {
+      return PlaylistModel.fromMap(doc.id, doc.data());
+    }).toList();
   }
 }

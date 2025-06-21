@@ -238,4 +238,22 @@ class MusicController {
       'play_count': FieldValue.increment(1),
     });
   }
+  Future<SongModel?> getSongById(String songId) async {
+    final doc = await FirebaseFirestore.instance
+        .collection('songs')
+        .doc(songId)
+        .get();
+
+    if (!doc.exists || doc.data() == null) return null;
+
+    final data = doc.data()!;
+    final rawLink = data['audio_url'] ?? '';
+    final updatedData = {
+      ...data,
+      'audio_url': convertDriveLink(rawLink),
+    };
+
+    return SongModel.fromMap(doc.id, updatedData);
+  }
+
 }

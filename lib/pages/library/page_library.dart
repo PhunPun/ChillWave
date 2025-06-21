@@ -1,3 +1,5 @@
+import 'package:chillwave/controllers/playlist_controller.dart';
+import 'package:chillwave/models/playlist_model.dart';
 import 'package:chillwave/pages/library/components/albums.dart';
 import 'package:chillwave/pages/library/components/artists.dart';
 import 'package:chillwave/pages/library/components/playlists.dart';
@@ -11,6 +13,18 @@ class ChillWaveScreen extends StatefulWidget {
 
 class _ChillWaveScreenState extends State<ChillWaveScreen> {
   int _selectedTab = 0;
+  Future<List<PlaylistModel>>? playlist;
+  
+
+  @override
+  void initState() {
+    playlist = PlaylistController.getUserPlaylists();
+    playlist!.then((list) {
+      for (var p in list) {
+        print('🎧 Playlist: ${p.name}, Songs: ${p.songIds.length}');
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +116,6 @@ class _ChillWaveScreenState extends State<ChillWaveScreen> {
                 ),
               ),
             ),
-            
             // Bottom Navigation
           ],
         ),
@@ -144,7 +157,7 @@ class _ChillWaveScreenState extends State<ChillWaveScreen> {
   Widget _buildTabContent() {
     switch (_selectedTab) {
       case 0: // Playlists
-        return PlaylistsTab();
+        return PlaylistsTap(playlist: playlist,);
       case 1: // Albums
         return AlbumsTab();
       case 2: // Artists
@@ -153,5 +166,4 @@ class _ChillWaveScreenState extends State<ChillWaveScreen> {
         return Container();
     }
   }
-
 }
