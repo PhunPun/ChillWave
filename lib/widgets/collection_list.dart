@@ -1,6 +1,6 @@
 import 'package:chillwave/controllers/artist_controller.dart';
 import 'package:chillwave/widgets/collection_card.dart';
-import 'package:chillwave/widgets/skeleton/collection_skeleton.dart';
+import 'package:chillwave/widgets/skeleton_search/collection_skeleton.dart';
 import 'package:flutter/material.dart';
 
 class CollectionList extends StatefulWidget {

@@ -1,6 +1,6 @@
 import 'package:chillwave/controllers/music_controller.dart';
 import 'package:chillwave/models/song_model.dart';
-import 'package:chillwave/widgets/skeleton/top_bxh_skeleton.dart';
+import 'package:chillwave/widgets/skeleton_search/top_bxh_skeleton.dart';
 import 'package:chillwave/widgets/top_bxh_card.dart';
 import 'package:flutter/material.dart';
 

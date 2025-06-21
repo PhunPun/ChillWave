@@ -1,4 +1,4 @@
-import 'package:chillwave/widgets/skeleton/song_card_skeleton.dart';
+import 'package:chillwave/widgets/skeleton_search/song_card_skeleton.dart';
 import 'package:flutter/material.dart';
 import 'song_card.dart';
 import '../models/song_model.dart';

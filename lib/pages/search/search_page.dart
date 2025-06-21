@@ -1,430 +1,200 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../themes/colors/colors.dart';
+import '../../controllers/search_controller.dart' as mysearch;
+import '../../widgets/search_components.dart';
+import 'components/search_bar.dart' as search_bar;
+import 'components/search_discover_section.dart';
+import 'components/search_history_section.dart';
+import 'components/search_results_section.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({Key? key}) : super(key: key);
 
   @override
-  State<SearchPage> createState() => _SearchPageState();
+  _SearchPageState createState() => _SearchPageState();
 }
 
-class _SearchPageState extends State<SearchPage> {
-  final FocusNode _searchFocus = FocusNode();
-  final TextEditingController _searchController = TextEditingController();
-  bool _showHistory = false;
-  List<String> _history = ['Giờ thi', '3107-2', 'Bức tranh màu nước mắt'];
+class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
+  late mysearch.SearchController _controller;
+  AnimationController? _searchBarController;
+  Animation<double>? _searchBarAnimation;
 
   @override
   void initState() {
     super.initState();
-    _searchFocus.addListener(() {
-      setState(() {
-        _showHistory = _searchFocus.hasFocus;
+    _controller = mysearch.SearchController();
+
+    try {
+      _searchBarController = AnimationController(
+        duration: const Duration(milliseconds: 300),
+        vsync: this,
+      );
+
+      _searchBarAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: _searchBarController!, curve: Curves.easeInOut),
+      );
+
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          _searchBarController?.forward();
+        }
       });
-    });
+    } catch (e) {
+      print('Lỗi khởi tạo animation: $e');
+    }
   }
 
   @override
   void dispose() {
-    _searchFocus.dispose();
-    _searchController.dispose();
+    _controller.dispose();
+    _searchBarController?.dispose();
     super.dispose();
   }
 
-  void _clearHistory() {
-    setState(() {
-      _history.clear();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        leading:
-            _showHistory
-                ? IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Color(MyColor.se4)),
-                  onPressed: () {
-                    _searchFocus.unfocus();
-                    setState(() {
-                      _showHistory = false;
-                    });
-                  },
-                )
-                : Padding(
-                  padding: const EdgeInsets.only(left: 12),
-                  child: CircleAvatar(
-                    radius: 20,
-                    backgroundColor: const Color(MyColor.se1),
-                    child: Icon(
-                      Icons.person,
-                      color: Color(MyColor.grey),
-                      size: 24,
+    return ChangeNotifierProvider<mysearch.SearchController>.value(
+      value: _controller,
+      child: Consumer<mysearch.SearchController>(
+        builder: (context, controller, _) {
+          return PopScope(
+            canPop:
+                !controller.showHistory &&
+                !controller.showSuggestions &&
+                controller.currentQuery.isEmpty &&
+                !controller.searchFocus.hasFocus,
+            onPopInvoked: (didPop) {
+              if (didPop) return;
+
+              if (controller.showHistory) {
+                controller.hideHistory();
+              } else if (controller.showSuggestions) {
+                controller.hideSuggestions();
+              } else if (controller.searchFocus.hasFocus) {
+                controller.searchFocus.unfocus();
+                FocusScope.of(context).unfocus();
+              } else if (controller.currentQuery.isNotEmpty) {
+                controller.clearSearch();
+              }
+            },
+            child: Scaffold(
+              backgroundColor: Colors.white,
+              appBar: _buildAppBar(controller),
+              body: Stack(
+                children: [
+                  _buildMainContent(controller),
+                  if (controller.showSuggestions)
+                    Positioned(
+                      top: 80,
+                      left: 0,
+                      right: 0,
+                      child: SearchSuggestionsList(controller: controller),
                     ),
-                  ),
-                ),
-        title: const Text(
-          'Tìm kiếm',
-          style: TextStyle(
-            color: Color(MyColor.se4),
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-          ),
-        ),
-        automaticallyImplyLeading: false,
-      ),
-      body: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 16),
-                Container(
-                  height: 56,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: const Color(MyColor.pr2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    children: [
-                      if (_showHistory) const SizedBox(width: 4),
-                      Expanded(
-                        child: TextField(
-                          focusNode: _searchFocus,
-                          controller: _searchController,
-                          style: const TextStyle(fontSize: 15),
-                          textAlignVertical: TextAlignVertical.center,
-                          decoration: const InputDecoration(
-                            isDense: true,
-                            isCollapsed: true,
-                            contentPadding: EdgeInsets.zero,
-                            hintText: 'Bạn muốn nghe gì?',
-                            border: InputBorder.none,
-                            hintStyle: TextStyle(
-                              color: Color(MyColor.se4),
-                              fontWeight: FontWeight.w500,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (_showHistory) ...[
-                        const SizedBox(width: 8),
-                        Image.asset(
-                          'assets/icons/music.png',
-                          width: 28,
-                          height: 28,
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(
-                          Icons.mic,
-                          color: Color(MyColor.se4),
-                          size: 24,
-                        ),
-                      ] else ...[
-                        const Icon(
-                          Icons.mic,
-                          color: Color(MyColor.se4),
-                          size: 20,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                if (!_showHistory) ...[
-                  const Text(
-                    'Trending',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: Color(MyColor.se4),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Color(MyColor.pr2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: SizedBox(
-                      height: 180,
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final double spacing = 16;
-                          final double cardWidth =
-                              (constraints.maxWidth - spacing) / 2;
-                          return ListView(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            children: [
-                              _TrendingCard(
-                                image: 'assets/images/tinhyeu.png',
-                                size: cardWidth,
-                              ),
-                              const SizedBox(width: 16),
-                              _TrendingCard(
-                                image: 'assets/images/chimsau.png',
-                                size: cardWidth,
-                              ),
-                              const SizedBox(width: 16),
-                              _TrendingCard(
-                                image: 'assets/images/tinhyeu.png',
-                                size: cardWidth,
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
                 ],
-                if (_showHistory) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Lịch sử tìm kiếm',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: Color(MyColor.se4),
-                        ),
-                      ),
-                      if (_history.isNotEmpty)
-                        TextButton(
-                          onPressed: _clearHistory,
-                          child: const Text(
-                            'Xóa tất cả',
-                            style: TextStyle(color: Color(MyColor.se4)),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  if (_history.isEmpty)
-                    const Text(
-                      'Không có lịch sử tìm kiếm',
-                      style: TextStyle(color: Color(MyColor.grey)),
-                    ),
-                  ..._history.map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.access_time,
-                            size: 18,
-                            color: Color(MyColor.se4),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              item,
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-                const Text(
-                  'Gần đây',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: Color(MyColor.se4),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: ListView(
-                    children: [
-                      _RecentCard(
-                        image: 'assets/images/tinhyeu.png',
-                        title: 'Mehabooba',
-                        subtitle: 'Kgf Chapter 2  •  Ananya Bhat',
-                        current: '2:50',
-                        total: '3:50',
-                      ),
-                      const SizedBox(height: 12),
-                      _RecentCard(
-                        image: 'assets/images/chimsau.png',
-                        title: 'Mehabooba',
-                        subtitle: 'Kgf Chapter 2  •  Ananya Bhat',
-                        current: '2:50',
-                        total: '3:50',
-                      ),
-                      const SizedBox(height: 12),
-                      _RecentCard(
-                        image: 'assets/images/tinhyeu.png',
-                        title: 'Mehabooba',
-                        subtitle: 'Kgf Chapter 2  •  Ananya Bhat',
-                        current: '2:50',
-                        total: '3:50',
-                      ),
-                      const SizedBox(height: 12),
-                      _RecentCard(
-                        image: 'assets/images/chimsau.png',
-                        title: 'Mehabooba',
-                        subtitle: 'Kgf Chapter 2  •  Ananya Bhat',
-                        current: '2:50',
-                        total: '3:50',
-                      ),
-                      const SizedBox(height: 12),
-                      _RecentCard(
-                        image: 'assets/images/tinhyeu.png',
-                        title: 'Mehabooba',
-                        subtitle: 'Kgf Chapter 2  •  Ananya Bhat',
-                        current: '2:50',
-                        total: '3:50',
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
-}
 
-class _TrendingCard extends StatelessWidget {
-  final String image;
-  final double size;
-  const _TrendingCard({required this.image, this.size = 140});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: const Color(MyColor.pr2),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Image.asset(image, fit: BoxFit.cover, width: size, height: size),
-      ),
-    );
-  }
-}
-
-class _RecentCard extends StatelessWidget {
-  final String image;
-  final String title;
-  final String subtitle;
-  final String current;
-  final String total;
-  const _RecentCard({
-    required this.image,
-    required this.title,
-    required this.subtitle,
-    required this.current,
-    required this.total,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 80,
-      decoration: BoxDecoration(
-        color: const Color(MyColor.pr2),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Image.asset(image, width: 60, height: 60, fit: BoxFit.cover),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: Color(MyColor.se4),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: 13,
+  PreferredSizeWidget _buildAppBar(mysearch.SearchController controller) {
+    return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      centerTitle: true,
+      leading:
+          controller.showHistory
+              ? IconButton(
+                icon: const Icon(Icons.arrow_back, color: Color(MyColor.se4)),
+                onPressed: controller.hideHistory,
+              )
+              : controller.hasResults || controller.currentQuery.isNotEmpty
+              ? IconButton(
+                icon: const Icon(Icons.arrow_back, color: Color(MyColor.se4)),
+                onPressed: () {
+                  controller.clearSearch();
+                  controller.searchController.clear();
+                  controller.searchFocus.unfocus();
+                  FocusScope.of(context).unfocus();
+                },
+              )
+              : Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: CircleAvatar(
+                  radius: 20,
+                  backgroundColor: const Color(MyColor.se1),
+                  child: Icon(
+                    Icons.person,
                     color: Color(MyColor.grey),
+                    size: 24,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Text(
-                      current,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(MyColor.pr5),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const Text(
-                      ' / ',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(MyColor.grey),
-                      ),
-                    ),
-                    Text(
-                      total,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(MyColor.se4),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: Container(
-              decoration: const BoxDecoration(
-                color: Color(MyColor.pr5),
-                shape: BoxShape.circle,
               ),
-              padding: const EdgeInsets.all(6),
-              child: const Icon(
-                Icons.play_arrow,
-                color: Colors.white,
-                size: 24,
-              ),
-            ),
-            onPressed: () {},
-          ),
-        ],
+      title: const Text(
+        'Tìm kiếm',
+        style: TextStyle(
+          color: Color(MyColor.se4),
+          fontWeight: FontWeight.bold,
+          fontSize: 22,
+        ),
       ),
+      actions: [
+        if (controller.currentQuery.isNotEmpty)
+          IconButton(
+            icon: const Icon(Icons.clear, color: Color(MyColor.se4)),
+            onPressed: controller.clearSearch,
+          ),
+      ],
+      automaticallyImplyLeading: false,
     );
+  }
+
+  Widget _buildMainContent(mysearch.SearchController controller) {
+    return Column(
+      children: [
+        search_bar.CustomSearchBar(
+          controller: controller,
+          readOnly: false,
+          animation: _searchBarAnimation,
+          onTap: () {
+            // TextField tự động focus khi tap, không cần logic phức tạp
+          },
+        ),
+        if (controller.hasResults || controller.currentQuery.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          SearchFilterChips(controller: controller),
+        ],
+        Expanded(child: _buildContentArea(controller)),
+      ],
+    );
+  }
+
+  Widget _buildContentArea(mysearch.SearchController controller) {
+    if (controller.isLoading) {
+      return const SearchLoadingIndicator();
+    }
+
+    if (controller.showHistory) {
+      return SearchHistorySection(controller: controller);
+    }
+
+    if (controller.hasResults) {
+      return SearchResultsSection(controller: controller);
+    }
+
+    if (controller.currentQuery.isNotEmpty && !controller.hasResults) {
+      return SearchEmptyState(
+        query: controller.currentQuery,
+        filter: controller.currentFilter.name,
+        errorMessage: controller.errorMessage,
+        hasError: controller.hasError,
+        onRetry: controller.retrySearch,
+      );
+    }
+
+    return SearchDiscoverSection(controller: controller);
   }
 }

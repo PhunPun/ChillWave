@@ -1,14 +1,16 @@
 import 'package:chillwave/apps/router/router_name.dart';
 import 'package:chillwave/pages/home/home_center.dart';
 import 'package:chillwave/pages/home/home_page.dart';
-import 'package:chillwave/pages/library/page_library.dart';
 import 'package:chillwave/pages/profile/user_profile_page.dart';
+import 'package:chillwave/pages/register/register_page.dart';
 import 'package:chillwave/pages/login/login_page.dart';
 import 'package:chillwave/pages/forgot_password/forgot_password_page.dart';
 import 'package:chillwave/pages/select_artist.dart/select_artist_page.dart';
 import 'package:chillwave/pages/upload_data_to_firebase.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
+import 'package:chillwave/pages/search/search_page.dart';
+import 'package:chillwave/pages/forgot_password/password_reset_controller.dart';
 
 class RouterCustum {
   static final GoRouter router = GoRouter(
@@ -16,16 +18,16 @@ class RouterCustum {
     routes: <RouteBase>[
       GoRoute(
         path: '/',
-        name: RouterName.welcome,
+        name: RouterName.login,
         builder: (BuildContext context, GoRouterState state) {
-          return HomeCenter();
+          return const SearchPage();
         },
       ),
       GoRoute(
-        path: '/home',
-        name: RouterName.home,
+        path: '/register',
+        name: RouterName.register,
         builder: (BuildContext context, GoRouterState state) {
-          return const HomePage();
+          return const RegisterPage();
         },
       ),
       GoRoute(
@@ -36,10 +38,17 @@ class RouterCustum {
         },
       ),
       GoRoute(
-        path: '/login',
-        name: RouterName.login,
+        path: '/homecenter',
+        name: 'homecenter',
         builder: (BuildContext context, GoRouterState state) {
-          return const LoginPage();
+          return const HomeCenter();
+        },
+      ),
+      GoRoute(
+        path: '/home',
+        name: RouterName.home,
+        builder: (BuildContext context, GoRouterState state) {
+          return const HomePage();
         },
       ),
       GoRoute(
