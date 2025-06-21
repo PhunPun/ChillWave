@@ -1,5 +1,8 @@
+
+import 'package:chillwave/controllers/playlist_controller.dart';
+import 'package:chillwave/models/playlist_model.dart';
 import 'package:chillwave/pages/library/components/albums.dart';
-import 'package:chillwave/pages/library/components/arttists.dart';
+import 'package:chillwave/pages/library/components/artists.dart';
 import 'package:chillwave/pages/library/components/playlists.dart';
 import 'package:flutter/material.dart';
 import '../../themes/colors/colors.dart';
@@ -11,7 +14,18 @@ class ChillWaveScreen extends StatefulWidget {
 
 class _ChillWaveScreenState extends State<ChillWaveScreen> {
   int _selectedTab = 0;
-  int _selectedBottomTab = 0;
+  Future<List<PlaylistModel>>? playlist;
+  
+
+  @override
+  void initState() {
+    playlist = PlaylistController.getUserPlaylists();
+    playlist!.then((list) {
+      for (var p in list) {
+        print('🎧 Playlist: ${p.name}, Songs: ${p.songIds.length}');
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,13 +40,6 @@ class _ChillWaveScreenState extends State<ChillWaveScreen> {
               child: Column(
                 children: [
                   // Top row with icons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Icon(Icons.search, color: Color(MyColor.se2), size: 35),
-                      Icon(Icons.menu, color: Color(MyColor.se2), size: 35),
-                    ],
-                  ),
                   SizedBox(height: 8),
                   // ChillWave title moved down with gradient
                   ShaderMask(
@@ -105,13 +112,10 @@ class _ChillWaveScreenState extends State<ChillWaveScreen> {
                     Expanded(
                       child: _buildTabContent(),
                     ),
-                    
-                    SizedBox(height: 16),
                   ],
                 ),
               ),
             ),
-            
             // Bottom Navigation
           ],
         ),
@@ -153,7 +157,7 @@ class _ChillWaveScreenState extends State<ChillWaveScreen> {
   Widget _buildTabContent() {
     switch (_selectedTab) {
       case 0: // Playlists
-        return PlaylistsTab();
+        return PlaylistsTap(playlist: playlist,);
       case 1: // Albums
         return AlbumsTab();
       case 2: // Artists
@@ -161,53 +165,5 @@ class _ChillWaveScreenState extends State<ChillWaveScreen> {
       default:
         return Container();
     }
-  }
-  
-  Widget _buildBottomNavItem(IconData icon, String label, int index) {
-    bool isSelected = _selectedBottomTab == index;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedBottomTab = index),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? Color(MyColor.pr6) : Color(MyColor.grey),
-            size: 26,
-          ),
-          if (label.isNotEmpty) ...[
-            SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Color(MyColor.pr6) : Color(MyColor.grey),
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-// Main App
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'ChillWave Library',
-      theme: ThemeData(
-        primarySwatch: Colors.pink,
-        fontFamily: 'SF Pro Display',
-      ),
-      home: ChillWaveScreen(),
-      debugShowCheckedModeBanner: false,
-    );
   }
 }
