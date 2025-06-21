@@ -1,6 +1,7 @@
 import 'package:chillwave/apps/router/router_name.dart';
 import 'package:chillwave/pages/home/home_center.dart';
 import 'package:chillwave/pages/home/home_page.dart';
+import 'package:chillwave/pages/library/page_library.dart';
 import 'package:chillwave/pages/profile/user_profile_page.dart';
 import 'package:chillwave/pages/register/register_page.dart';
 import 'package:chillwave/pages/login/login_page.dart';

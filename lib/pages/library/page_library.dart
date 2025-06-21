@@ -1,3 +1,4 @@
+
 import 'package:chillwave/controllers/playlist_controller.dart';
 import 'package:chillwave/models/playlist_model.dart';
 import 'package:chillwave/pages/library/components/albums.dart';
@@ -111,7 +112,6 @@ class _ChillWaveScreenState extends State<ChillWaveScreen> {
                     Expanded(
                       child: _buildTabContent(),
                     ),
-                    
                   ],
                 ),
               ),

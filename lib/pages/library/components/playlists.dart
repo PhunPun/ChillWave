@@ -128,6 +128,7 @@ class PlaylistsTap extends StatelessWidget {
               const Icon(Icons.chevron_right, color: Color(MyColor.pr6)),
             ],
           ),
+
         ),
       ),
     );
