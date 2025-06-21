@@ -4,6 +4,7 @@ class ArtistModel {
   final String artistImages;
   final String bio;
   final List<String> albums;
+  final int loveCount;
 
   ArtistModel({
     required this.id,
@@ -11,6 +12,7 @@ class ArtistModel {
     required this.artistImages,
     required this.bio,
     required this.albums,
+    required this.loveCount,
   });
 
   factory ArtistModel.fromMap(Map<String, dynamic> map, String id) {
@@ -22,6 +24,7 @@ class ArtistModel {
         : map['artist_images'],
       bio: map['bio'] ?? '',
       albums: List<String>.from(map['albums'] ?? []),
+      loveCount: map['love_count'] ?? 0,
     );
   }
 
@@ -32,6 +35,7 @@ class ArtistModel {
       'artist_images': artistImages,
       'bio': bio,
       'albums': albums,
+      'love_count': loveCount,
     };
   }
 }

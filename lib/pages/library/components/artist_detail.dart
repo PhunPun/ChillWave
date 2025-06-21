@@ -1,3 +1,9 @@
+import 'package:chillwave/controllers/album_controller.dart';
+import 'package:chillwave/controllers/artist_controller.dart';
+import 'package:chillwave/controllers/music_controller.dart';
+import 'package:chillwave/models/song_model.dart';
+import 'package:chillwave/widgets/skeleton/song_card_skeleton.dart';
+import 'package:chillwave/widgets/song_card.dart';
 import 'package:flutter/material.dart';
 import 'package:chillwave/models/artist_model.dart';
 import '../../../themes/colors/colors.dart';
@@ -12,6 +18,19 @@ class ArtistDetailPage extends StatefulWidget {
 }
 
 class _ArtistDetailPageState extends State<ArtistDetailPage> {
+  bool _isFavorite = false;
+  @override
+  void initState() {
+    super.initState();
+    _checkIfFavorite();
+  }
+
+  Future<void> _checkIfFavorite() async {
+    final result = await ArtistController.isFavorite(widget.artist.id);
+    setState(() {
+      _isFavorite = result;
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,17 +48,26 @@ class _ArtistDetailPageState extends State<ArtistDetailPage> {
             ),
             actions: [
               IconButton(
-                icon: Icon(Icons.favorite_border, color: Colors.white),
-                onPressed: () {
-                  // TODO: Add to favorites
+                icon: Icon(
+                  _isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: _isFavorite ? Colors.redAccent : Colors.white,
+                ),
+                onPressed: () async {
+                  setState(() => _isFavorite = !_isFavorite);
+
+                  if (_isFavorite) {
+                    await ArtistController.saveFavoriteArtists({widget.artist.id});
+                  } else {
+                    await ArtistController.removeFavoriteArtist(widget.artist.id);
+                  }
                 },
               ),
-              IconButton(
-                icon: Icon(Icons.more_vert, color: Colors.white),
-                onPressed: () {
-                  // TODO: Show more options
-                },
-              ),
+              // IconButton(
+              //   icon: Icon(Icons.more_vert, color: Colors.white),
+              //   onPressed: () {
+              //     // TODO: Show more options
+              //   },
+              // ),
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
@@ -100,13 +128,14 @@ class _ArtistDetailPageState extends State<ArtistDetailPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Action buttons
-                _buildActionButtons(),
+                //_buildActionButtons(),
                 
                 // Artist info
+                const SizedBox(height: 10,),
                 _buildArtistInfo(),
                 
                 // Albums section
-                _buildAlbumsSection(),
+                //_buildAlbumsSection(),
                 
                 // Popular songs section
                 _buildPopularSongsSection(),
@@ -219,59 +248,65 @@ class _ArtistDetailPageState extends State<ArtistDetailPage> {
   }
   
   Widget _buildArtistInfo() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Thông tin nghệ sĩ',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(MyColor.se4),
-            ),
+    return FutureBuilder<int>(
+      future: AlbumController.countAlbumsByArtist(widget.artist.id),
+      builder: (context, snapshot) {
+        final count = snapshot.data ?? 0;
+
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Thông tin nghệ sĩ',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(MyColor.se4),
+                ),
+              ),
+              SizedBox(height: 12),
+
+              if (widget.artist.bio.isNotEmpty)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tiểu sử',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(MyColor.se4),
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      widget.artist.bio,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Color(MyColor.grey),
+                        height: 1.5,
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                  ],
+                ),
+
+              if (snapshot.connectionState == ConnectionState.waiting)
+                _buildInfoRow('Số album', 'Đang tải...')
+              else
+                _buildInfoRow('Số album', '$count album'),
+
+              _buildInfoRow('ID', widget.artist.id),
+
+              SizedBox(height: 20),
+            ],
           ),
-          SizedBox(height: 12),
-          
-          // Bio
-          if (widget.artist.bio.isNotEmpty)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Tiểu sử',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(MyColor.se4),
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  widget.artist.bio,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Color(MyColor.grey),
-                    height: 1.5,
-                  ),
-                ),
-                SizedBox(height: 16),
-              ],
-            ),
-          
-          // Albums count
-          _buildInfoRow('Số album', '${widget.artist.albums.length} album'),
-          
-          // Artist ID (for debugging - can be removed)
-          _buildInfoRow('ID', widget.artist.id),
-          
-          SizedBox(height: 20),
-        ],
-      ),
+        );
+      },
     );
   }
-  
   Widget _buildInfoRow(String label, String value) {
     return Padding(
       padding: EdgeInsets.only(bottom: 8),
@@ -450,67 +485,49 @@ class _ArtistDetailPageState extends State<ArtistDetailPage> {
             ),
           ),
         ),
-        SizedBox(height: 8),
-        
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Danh sách bài hát sẽ được cập nhật khi có dữ liệu từ albums',
-            style: TextStyle(
-              fontSize: 14,
-              color: Color(MyColor.grey),
-              fontStyle: FontStyle.italic,
-            ),
-          ),
+        const SizedBox(height: 8),
+
+        // StreamBuilder để hiển thị danh sách bài hát
+        StreamBuilder<List<SongModel>>(
+          stream: MusicController().getSongsByArtistId(widget.artist.id),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Padding(
+                padding: EdgeInsets.all(20),
+                child: SongCardSkeleton(),
+              );
+            }
+
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'Không có bài hát nào.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(MyColor.grey),
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              );
+            }
+
+            final songs = snapshot.data!;
+            print('====== $songs');
+            return Container(
+              margin: EdgeInsets.only(left: 40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: songs.take(5).map((SongModel song) => SongCard(song: song)).toList(),
+              ),
+            );
+          },
         ),
-        
-        SizedBox(height: 16),
-        
-        // Placeholder songs
-        ...List.generate(3, (index) => _buildSongItem(index)),
+
+        const SizedBox(height: 16),
       ],
     );
   }
+
   
-  Widget _buildSongItem(int index) {
-    return ListTile(
-      contentPadding: EdgeInsets.symmetric(horizontal: 20),
-      leading: Container(
-        width: 50,
-        height: 50,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          color: Color(MyColor.pr1),
-        ),
-        child: Center(
-          child: Icon(
-            Icons.music_note,
-            color: Color(MyColor.pr4),
-          ),
-        ),
-      ),
-      title: Text(
-        'Bài hát mẫu ${index + 1}',
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          color: Color(MyColor.se4),
-        ),
-      ),
-      subtitle: Text(
-        widget.artist.artistName,
-        style: TextStyle(
-          color: Color(MyColor.grey),
-        ),
-      ),
-      trailing: IconButton(
-        icon: Icon(Icons.more_vert, color: Color(MyColor.grey)),
-        onPressed: () {
-          // TODO: Show song options
-        },
-      ),
-      onTap: () {
-        // TODO: Play song
-      },
-    );
-  }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:chillwave/models/song_model.dart';
 import '../../../themes/colors/colors.dart';
+import '../../../controllers/player_controller.dart';
 
 class MusicPlayerScreen extends StatelessWidget {
   final SongModel song;
@@ -14,6 +15,8 @@ class MusicPlayerScreen extends StatelessWidget {
   final VoidCallback togglePlayPause;
   final VoidCallback toggleFavorite;
   final Function(double) onSeek;
+  final VoidCallback onNext;
+  final VoidCallback onPrev;
 
   const MusicPlayerScreen({
     Key? key,
@@ -28,10 +31,14 @@ class MusicPlayerScreen extends StatelessWidget {
     required this.togglePlayPause,
     required this.toggleFavorite,
     required this.onSeek,
+    required this.onNext,
+    required this.onPrev,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final playerController = PlayerController();
+    
     return Scaffold( // đảm bảo điều chỉnh theo bàn phím
       resizeToAvoidBottomInset: true,
       backgroundColor: Color(MyColor.white),
@@ -43,7 +50,7 @@ class MusicPlayerScreen extends StatelessWidget {
           child: IntrinsicHeight(
             child: Column(
               children: [
-                const SizedBox(height: 60),
+                const SizedBox(height: 30),
                 // Album Art
                 Transform.rotate(
                   angle: currentAngle,
@@ -74,35 +81,34 @@ class MusicPlayerScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Column(
                     children: [
-                      // Song Info
+
+                      // Favorite Button
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  song.name.toUpperCase(),
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(MyColor.pr4),
-                                    letterSpacing: 0.5,
-                                  ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                song.name,
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(MyColor.black),
                                 ),
-                                Text(
-                                  artistNames.isNotEmpty
-                                      ? artistNames.join(', ')
-                                      : 'Đang tải nghệ sĩ...',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Color(MyColor.grey),
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                artistNames.join(", "),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Color(MyColor.grey),
                                 ),
-                              ],
-                            ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ),
                           IconButton(
                             icon: Icon(
@@ -118,8 +124,7 @@ class MusicPlayerScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
-
+                       const SizedBox(height: 20),
                       // Progress Slider
                       SliderTheme(
                         data: SliderTheme.of(context).copyWith(
@@ -132,10 +137,8 @@ class MusicPlayerScreen extends StatelessWidget {
                         ),
                         child: Slider(
                           min: 0,
-                          max: duration.inSeconds.toDouble(),
-                          value: position.inSeconds
-                              .clamp(0, duration.inSeconds)
-                              .toDouble(),
+                          max: duration.inSeconds > 0 ? duration.inSeconds.toDouble() : 1, // ✅ tránh lỗi 0
+                          value: position.inSeconds.clamp(0, duration.inSeconds > 0 ? duration.inSeconds : 1).toDouble(),
                           onChanged: onSeek,
                         ),
                       ),
@@ -166,8 +169,10 @@ class MusicPlayerScreen extends StatelessWidget {
                         children: [
                           Icon(Icons.shuffle,
                               color: Color(MyColor.grey), size: 24),
-                          Icon(Icons.skip_previous,
-                              color: Color(MyColor.black), size: 32),
+                          IconButton(
+                            icon: Icon(Icons.skip_previous, color: Color(MyColor.black), size: 32),
+                            onPressed: onPrev,
+                          ),
                           Container(
                             width: 64,
                             height: 64,
@@ -184,10 +189,24 @@ class MusicPlayerScreen extends StatelessWidget {
                               onPressed: togglePlayPause,
                             ),
                           ),
-                          Icon(Icons.skip_next,
-                              color: Color(MyColor.black), size: 32),
-                          Icon(Icons.repeat,
-                              color: Color(MyColor.grey), size: 24),
+                          IconButton(
+                            icon: Icon(Icons.skip_next, color: Color(MyColor.black), size: 32),
+                            onPressed: onNext,
+                          ),
+                          StreamBuilder<bool>(
+                            stream: Stream.value(playerController.isLooping),
+                            builder: (context, snapshot) {
+                              final isLooping = snapshot.data ?? false;
+                              return IconButton(
+                                icon: Icon(
+                                  Icons.repeat,
+                                  color: isLooping ? Color(MyColor.pr4) : Color(MyColor.grey),
+                                  size: 24,
+                                ),
+                                onPressed: () => playerController.toggleLoop(),
+                              );
+                            },
+                          ),
                         ],
                       ),
                     ],

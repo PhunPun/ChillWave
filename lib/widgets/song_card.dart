@@ -8,8 +8,13 @@ import 'package:flutter/material.dart';
 
 class SongCard extends StatelessWidget {
   final SongModel song;
+  final List<SongModel>? playlist;
 
-  const SongCard({super.key, required this.song});
+  const SongCard({
+    super.key, 
+    required this.song,
+    this.playlist
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +27,7 @@ class SongCard extends StatelessWidget {
         print('== linkMp3: ${song.linkMp3}');
         Navigator.push(context, 
           MaterialPageRoute(
-            builder: (context) => MusicPlayerWithSwipeScreen(song: song,),
+            builder: (context) => MusicPlayerWithSwipeScreen(song: song, playlist: playlist,),
           ),
         );
       },

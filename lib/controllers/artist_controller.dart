@@ -70,6 +70,13 @@ class ArtistController {
           'created_at': FieldValue.serverTimestamp(),
         });
       }
+      // Tăng love_count cho từng artist
+      for (final artistId in artistIds) {
+        final artistDoc = _artistRef.doc(artistId);
+        await artistDoc.update({
+          'love_count': FieldValue.increment(1),
+        });
+      }
     } catch (e) {
       rethrow;
     }
@@ -105,6 +112,12 @@ class ArtistController {
           'song_id': songIds,
           'categories': 'songs',
           'created_at': FieldValue.serverTimestamp(),
+        });
+      }
+      for (final songId in songIds) {
+        final songDoc = _firestore.collection('songs').doc(songId);
+        await songDoc.update({
+          'love_count': FieldValue.increment(1),
         });
       }
     } catch (e) {
@@ -194,5 +207,82 @@ class ArtistController {
         .get();
     return snapshot.docs;
   }
+  static Future<String> getArtistNameById(String id) async {
+    try {
+      final doc = await _artistRef.doc(id).get();
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        return data['artist_name']?.toString().trim() ?? 'Không rõ tên';
+      } else {
+        return 'Không tìm thấy nghệ sĩ';
+      }
+    } catch (e) {
+      return 'Lỗi: $e';
+    }
+  }
+  static Future<List<String>> getArtistNamesByIds(List<String> ids) async {
+    try {
+      final snapshots = await Future.wait(
+        ids.map((id) => _artistRef.doc(id).get()),
+      );
+
+      return snapshots.map((doc) {
+        if (doc.exists) {
+          final data = doc.data() as Map<String, dynamic>;
+          return data['artist_name']?.toString().trim() ?? 'Không rõ tên';
+        }
+        return 'Không tìm thấy nghệ sĩ';
+      }).toList();
+    } catch (e) {
+      return ['Lỗi: $e'];
+    }
+  }
+  static Future<bool> isFavorite(String artistId) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) return false;
+
+    final snapshot = await _firestore
+        .collection('users')
+        .doc(currentUser.uid)
+        .collection('favorites')
+        .where('categories', isEqualTo: 'artists')
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isEmpty) return false;
+
+    final artistIds = List<String>.from(snapshot.docs.first['artist_id']);
+    return artistIds.contains(artistId);
+  }
+  static Future<void> removeFavoriteArtist(String artistId) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) return;
+
+    final favoritesRef = _firestore
+        .collection('users')
+        .doc(currentUser.uid)
+        .collection('favorites');
+
+    final snapshot = await favoritesRef
+        .where('categories', isEqualTo: 'artists')
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      final doc = snapshot.docs.first;
+      await doc.reference.update({
+        'artist_id': FieldValue.arrayRemove([artistId]),
+        'updated_at': FieldValue.serverTimestamp(),
+      });
+
+      // Giảm love_count cho artist đó
+      final artistDoc = _artistRef.doc(artistId);
+      await artistDoc.update({
+        'love_count': FieldValue.increment(-1),
+      });
+    }
+  }
+
+
 
 }

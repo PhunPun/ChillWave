@@ -6,56 +6,132 @@ class UploadDataToFirebase extends StatelessWidget {
   UploadDataToFirebase({super.key});
 
   final List<Map<String, String>> artistList = [
-    {
-    "artist_name": "Taylor Swift",
+  {
+    "artist_name": "B RAY",
     "artist_images": "",
-    "bio": "Taylor Swift là nữ ca sĩ kiêm nhạc sĩ người Mỹ, nổi bật với các bản hit như 'Love Story', 'Shake It Off', và 'Blank Space'."
+    "bio": "B RAY là rapper người Việt Nam nổi tiếng với chất nhạc cá tính và lời rap sâu sắc. Anh nổi bật với các ca khúc như 'Cao Ốc 20', 'Đừng Tin Her', và 'Ex's Hate Me' kết hợp cùng Masew và Amee."
   },
   {
-    "artist_name": "Ed Sheeran",
+    "artist_name": "TAGE",
     "artist_images": "",
-    "bio": "Ed Sheeran là ca sĩ kiêm nhạc sĩ người Anh, được biết đến qua các ca khúc như 'Perfect', 'Shape of You', và 'Thinking Out Loud'."
+    "bio": "TAGE tên thật là Vũ Tuấn Huy, là rapper trẻ nổi bật từ Rap Việt mùa 1. Anh gây ấn tượng mạnh với khả năng gieo vần và tốc độ rap nhanh trong các ca khúc như 'Lớp 13' và 'Không Phải Gu'."
   },
   {
-    "artist_name": "Adele",
+    "artist_name": "marzuz",
     "artist_images": "",
-    "bio": "Adele là nữ ca sĩ người Anh với chất giọng mạnh mẽ, nổi bật qua các ca khúc 'Hello', 'Someone Like You' và 'Easy On Me'."
+    "bio": "marzuz là nữ ca sĩ kiêm nhạc sĩ trẻ người Việt, được biết đến với phong cách folk-pop độc đáo. Cô bắt đầu sáng tác từ năm 16 tuổi và nổi tiếng với các ca khúc như 'Mai'."
   },
   {
-    "artist_name": "Justin Bieber",
+    "artist_name": "RPT MCK",
     "artist_images": "",
-    "bio": "Justin Bieber là ca sĩ người Canada, nổi tiếng toàn cầu với các bản hit như 'Baby', 'Peaches', và 'Sorry'."
+    "bio": "RPT MCK tên thật là Nghiêm Vũ Hoàng Long, là rapper trẻ tài năng nổi bật từ chương trình Rap Việt. Anh có nhiều bản hit như 'Chìm Sâu', 'Tại Vì Sao' và 'Va Vào Giai Điệu Này'."
   },
   {
-    "artist_name": "BTS",
+    "artist_name": "Trung Trần",
     "artist_images": "",
-    "bio": "BTS là nhóm nhạc nam Hàn Quốc hàng đầu thế giới, nổi bật qua các bản hit như 'Dynamite', 'Butter', và 'Boy With Luv'."
+    "bio": "Trung Trần là ca sĩ trẻ người Việt, được yêu thích qua giọng hát cảm xúc trong ca khúc 'Chìm Sâu' kết hợp cùng RPT MCK."
   },
   {
-    "artist_name": "The Weeknd",
+    "artist_name": "Hoàng Tôn",
     "artist_images": "",
-    "bio": "The Weeknd là ca sĩ người Canada, nổi bật với phong cách R&B và các ca khúc như 'Blinding Lights', 'Starboy'."
+    "bio": "Hoàng Tôn là ca sĩ kiêm nhạc sĩ người Việt, từng đạt quán quân The Voice 2013. Anh nổi tiếng với các bản hit như 'Nỗi Nhớ Đầy Vơi', 'Dành Cho Em' và nhiều ca khúc R&B hiện đại."
   },
   {
-    "artist_name": "Billie Eilish",
+    "artist_name": "Tlinh",
     "artist_images": "",
-    "bio": "Billie Eilish là ca sĩ trẻ người Mỹ với phong cách độc đáo, nổi tiếng qua 'Bad Guy', 'Lovely' và 'Happier Than Ever'."
+    "bio": "Tlinh tên thật là Nguyễn Thảo Linh, là nữ rapper kiêm ca sĩ trẻ nổi bật tại Rap Việt. Cô được biết đến với phong cách cá tính và các bản hit như 'Gái Độc Thân', 'Tình Yêu Ơi Cậu Có Nghe'."
   },
   {
-    "artist_name": "Bruno Mars",
+    "artist_name": "Wxrdie",
     "artist_images": "",
-    "bio": "Bruno Mars là nghệ sĩ đa tài người Mỹ với các hit như 'Just The Way You Are', '24K Magic', 'Uptown Funk'."
+    "bio": "Wxrdie là rapper người Việt thuộc thế hệ trẻ của rap Hà Nội. Anh gây ấn tượng với phong cách phóng khoáng và các ca khúc như 'Ca Khúc Cuối', 'Đến Thăm Anh Đi', và 'Lonely Stonie'."
   },
   {
-    "artist_name": "Ariana Grande",
+    "artist_name": "KayC",
     "artist_images": "",
-    "bio": "Ariana Grande là ca sĩ người Mỹ có giọng hát cao vút, nổi tiếng với các ca khúc '7 Rings', 'Positions', và 'Into You'."
+    "bio": "KayC là rapper người Việt, từng kết hợp với Wxrdie trong các ca khúc như 'Thèn Chóa' và 'Pray For'. Anh có phong cách mạnh mẽ và lời rap đậm chất đường phố."
   },
   {
-    "artist_name": "Coldplay",
+    "artist_name": "JustaTee",
     "artist_images": "",
-    "bio": "Coldplay là ban nhạc rock người Anh, nổi tiếng toàn cầu với các ca khúc như 'Yellow', 'Viva La Vida', và 'Fix You'."
+    "bio": "JustaTee là ca sĩ R&B, rapper kiêm nhà sản xuất âm nhạc, nổi bật từ những năm 2010. Anh nổi tiếng với các bài hát như 'Thằng Điên', 'Đã Lỡ Yêu Em Nhiều' và là huấn luyện viên Rap Việt."
+  },
+  {
+    "artist_name": "Wren Evans",
+    "artist_images": "",
+    "bio": "Wren Evans là nghệ sĩ trẻ Việt Nam với phong cách âm nhạc hiện đại và cá tính. Anh gây chú ý với các bài hit như 'Tò Te Tí', 'Gặp May' và 'Call Me'."
+  },
+  {
+    "artist_name": "The flob",
+    "artist_images": "",
+    "bio": "The flob là một nhóm nhạc trẻ tại Việt Nam nổi bật với các ca khúc như '232 Tuổi (Original)' và 'Hoành Tráng ver', mang đậm cá tính và sáng tạo âm nhạc."
+  },
+  {
+    "artist_name": "MONO",
+    "artist_images": "",
+    "bio": "MONO tên thật là Nguyễn Việt Hoàng, em trai Sơn Tùng MTP. Anh debut với ca khúc 'Waiting For You' và nhanh chóng tạo dấu ấn với hình ảnh cá tính và âm nhạc hiện đại."
+  },
+  {
+    "artist_name": "Sơn Tùng MTP",
+    "artist_images": "",
+    "bio": "Sơn Tùng MTP là ca sĩ, nhạc sĩ, và nhà sản xuất âm nhạc hàng đầu Việt Nam. Anh nổi bật với các bản hit như 'Cơn Mưa Ngang Qua', 'Chạy Ngay Đi', và 'Lạc Trôi'."
+  },
+  {
+    "artist_name": "buitruonglinh",
+    "artist_images": "",
+    "bio": "Bùi Trường Linh là ca sĩ, nhạc sĩ indie Việt Nam, nổi tiếng qua những bản ballad cảm xúc như 'Thích Em Hơi Nhiều' và 'Tình Bạn Diệu Kỳ'."
   }
+
+  //   {
+  //   "artist_name": "Taylor Swift",
+  //   "artist_images": "",
+  //   "bio": "Taylor Swift là nữ ca sĩ kiêm nhạc sĩ người Mỹ, nổi bật với các bản hit như 'Love Story', 'Shake It Off', và 'Blank Space'."
+  // },
+  // {
+  //   "artist_name": "Ed Sheeran",
+  //   "artist_images": "",
+  //   "bio": "Ed Sheeran là ca sĩ kiêm nhạc sĩ người Anh, được biết đến qua các ca khúc như 'Perfect', 'Shape of You', và 'Thinking Out Loud'."
+  // },
+  // {
+  //   "artist_name": "Adele",
+  //   "artist_images": "",
+  //   "bio": "Adele là nữ ca sĩ người Anh với chất giọng mạnh mẽ, nổi bật qua các ca khúc 'Hello', 'Someone Like You' và 'Easy On Me'."
+  // },
+  // {
+  //   "artist_name": "Justin Bieber",
+  //   "artist_images": "",
+  //   "bio": "Justin Bieber là ca sĩ người Canada, nổi tiếng toàn cầu với các bản hit như 'Baby', 'Peaches', và 'Sorry'."
+  // },
+  // {
+  //   "artist_name": "BTS",
+  //   "artist_images": "",
+  //   "bio": "BTS là nhóm nhạc nam Hàn Quốc hàng đầu thế giới, nổi bật qua các bản hit như 'Dynamite', 'Butter', và 'Boy With Luv'."
+  // },
+  // {
+  //   "artist_name": "The Weeknd",
+  //   "artist_images": "",
+  //   "bio": "The Weeknd là ca sĩ người Canada, nổi bật với phong cách R&B và các ca khúc như 'Blinding Lights', 'Starboy'."
+  // },
+  // {
+  //   "artist_name": "Billie Eilish",
+  //   "artist_images": "",
+  //   "bio": "Billie Eilish là ca sĩ trẻ người Mỹ với phong cách độc đáo, nổi tiếng qua 'Bad Guy', 'Lovely' và 'Happier Than Ever'."
+  // },
+  // {
+  //   "artist_name": "Bruno Mars",
+  //   "artist_images": "",
+  //   "bio": "Bruno Mars là nghệ sĩ đa tài người Mỹ với các hit như 'Just The Way You Are', '24K Magic', 'Uptown Funk'."
+  // },
+  // {
+  //   "artist_name": "Ariana Grande",
+  //   "artist_images": "",
+  //   "bio": "Ariana Grande là ca sĩ người Mỹ có giọng hát cao vút, nổi tiếng với các ca khúc '7 Rings', 'Positions', và 'Into You'."
+  // },
+  // {
+  //   "artist_name": "Coldplay",
+  //   "artist_images": "",
+  //   "bio": "Coldplay là ban nhạc rock người Anh, nổi tiếng toàn cầu với các ca khúc như 'Yellow', 'Viva La Vida', và 'Fix You'."
+  // }
     // {
     //   "artist_name": "Đen Vâu",
     //   "artist_images": "",
@@ -317,126 +393,1164 @@ class UploadDataToFirebase extends StatelessWidget {
   final firestore = FirebaseFirestore.instance;
 
   final List<Map<String, dynamic>> songs = [
-    // Coldplay
-{
-  'song_name': 'Fix You',
-  'artist_id': ['lKJoNShUxxUKxCd1Kp83'],
-  'audio_url': '',
-  'duration': null,
-  'love_count': 0,
-  'play_count': 0,
-  'song_imageUrl': '',
-  'year': 2005,
-  'country': 'international',
-},
+   {
+    "song_name": "Ai Cũng Phải Bắt Đầu Từ Đâu Đó",
+    "artist_id": [
+      "3sOvqtORQzMlzBk7Y5aX"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Giờ Thì Ai Cười",
+    "artist_id": [
+      "3sOvqtORQzMlzBk7Y5aX"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Không Phải Gu",
+    "artist_id": [
+      "3sOvqtORQzMlzBk7Y5aX",
+      "ai3UVs2L5JTGeXSst5s7",
+      "mEdDgIp14dR4wX1OSfqm"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Siêu Sao",
+    "artist_id": [
+      "3sOvqtORQzMlzBk7Y5aX"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Đi Họp Lớp",
+    "artist_id": [
+      "3sOvqtORQzMlzBk7Y5aX"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Không Thể Say",
+    "artist_id": [
+      "3sOvqtORQzMlzBk7Y5aX"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Exit Sign",
+    "artist_id": [
+      "3sOvqtORQzMlzBk7Y5aX",
+      "Emg6CX733PHUj9XGyQkd"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Visa Interlude",
+    "artist_id": [
+      "3sOvqtORQzMlzBk7Y5aX"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Sắp Nổi Tiếng",
+    "artist_id": [
+      "3sOvqtORQzMlzBk7Y5aX"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "KPI",
+    "artist_id": [
+      "3sOvqtORQzMlzBk7Y5aX"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Everything Will Be Okay",
+    "artist_id": [
+      "3sOvqtORQzMlzBk7Y5aX"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Cho Em An Toàn",
+    "artist_id": [
+      "3sOvqtORQzMlzBk7Y5aX"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "NOLOVENOLIFE",
+    "artist_id": [
+      "3sOvqtORQzMlzBk7Y5aX"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "00",
+    "artist_id": [
+      "cswFVcTDf9Ce1XGoxYhP"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Chìm Sâu",
+    "artist_id": [
+      "cswFVcTDf9Ce1XGoxYhP",
+      "JpO6xAlnl7xuTrh4UZeA"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Suit & Tie",
+    "artist_id": [
+      "cswFVcTDf9Ce1XGoxYhP",
+      "pNWrQR3xFwgCVCxNjP4p"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2022,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Va Vào Giai Điệu Này",
+    "artist_id": [
+      "cswFVcTDf9Ce1XGoxYhP"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2020,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Tối Nay Ta Đi Đâu Nhờ",
+    "artist_id": [
+      "cswFVcTDf9Ce1XGoxYhP"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Chỉ Một Đêm Nữa Thôi",
+    "artist_id": [
+      "cswFVcTDf9Ce1XGoxYhP",
+      "KEroQT2XCqqUJ9WE3E3Q"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Thôi Em Đừng Đi",
+    "artist_id": [
+      "cswFVcTDf9Ce1XGoxYhP",
+      "JpO6xAlnl7xuTrh4UZeA"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "50/50",
+    "artist_id": [
+      "cswFVcTDf9Ce1XGoxYhP"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Cuốn Cho Anh Một Điếu Nữa Đi",
+    "artist_id": [
+      "cswFVcTDf9Ce1XGoxYhP"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Show Me Love",
+    "artist_id": [
+      "cswFVcTDf9Ce1XGoxYhP"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Tại Vì Sao",
+    "artist_id": [
+      "cswFVcTDf9Ce1XGoxYhP"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Thờ Er",
+    "artist_id": [
+      "cswFVcTDf9Ce1XGoxYhP"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Ai Mới Là Kẻ Xấu Xa",
+    "artist_id": [
+      "cswFVcTDf9Ce1XGoxYhP"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Anh Đã Ổn Hơn",
+    "artist_id": [
+      "cswFVcTDf9Ce1XGoxYhP"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Badtrip",
+    "artist_id": [
+      "cswFVcTDf9Ce1XGoxYhP"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Ca Khúc Cuối",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2024,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Thèn Chóa",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z",
+      "3Y83NHVrwqDeJfgj6tTr"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2024,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Băng Qua Cầu Giấy",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2024,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Đến Thăm Anh Đi",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Life Of A Hxstler",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Lonely Stonie",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2024,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Mấy Đứa Nhóc",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2024,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Trở Về",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z",
+      "GTnxq4wlPfXs1lBAX9sr"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2024,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Pray For",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z",
+      "3Y83NHVrwqDeJfgj6tTr"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Bởi Vì",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Tim Anh Ghen",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Get Money",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2024,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Anh Freestyle",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2024,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Đau Đầu",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2024,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "29",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Siêu Nhân Ngao",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Gia Tài",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2024,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Lối Sống",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Nu Cep",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Tổng Kết",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Cả 2",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2024,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Lâu Đài",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2022,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Mời Em",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2022,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Thíc Qé",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Phóng Đổ Tim Em",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Call Me",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Cầu Vĩnh Tuy",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Từng Quen",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Bé Ơi Từ Từ",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Lối Chơi (Interlude)",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Tình Yêu Vĩ Mô",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2022,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Việt Kiều",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "ĐĐĐ",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2020,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Quyền Anh",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Tò Te Tí",
+    "artist_id": [
+      "xyaJfJdBCfHoeaXpx81z"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2024,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "232 Tuổi (Hoành Tráng ver)",
+    "artist_id": [
+      "NNxHM9UtsD35ruRi2hwI"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "232 Tuổi (Original)",
+    "artist_id": [
+      "NNxHM9UtsD35ruRi2hwI"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "232 Tuổi (Vu ver)",
+    "artist_id": [
+      "NNxHM9UtsD35ruRi2hwI"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2024,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "ĐẸP",
+    "artist_id": [
+      "8oVoGbBiKkdznV9pkvTA"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2024,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Cười Lên",
+    "artist_id": [
+      "8oVoGbBiKkdznV9pkvTA"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Em Xinh",
+    "artist_id": [
+      "8oVoGbBiKkdznV9pkvTA"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2023,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "OPEN YOUR EYES",
+    "artist_id": [
+      "8oVoGbBiKkdznV9pkvTA"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2024,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Có chắc yêu là đây",
+    "artist_id": [
+      "n4XTEy8BbFDU8raWRNS5"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2020,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Chúng ta của hiện tại",
+    "artist_id": [
+      "n4XTEy8BbFDU8raWRNS5"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2020,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Muộn rồi mà sao còn",
+    "artist_id": [
+      "n4XTEy8BbFDU8raWRNS5"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2021,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Nơi này có anh",
+    "artist_id": [
+      "n4XTEy8BbFDU8raWRNS5"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2017,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Vấn Vương",
+    "artist_id": [
+      "Emg6CX733PHUj9XGyQkd"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2025,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Giờ Thì",
+    "artist_id": [
+      "Emg6CX733PHUj9XGyQkd"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2024,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Từng Ngày Như Mãi Mãi",
+    "artist_id": [
+      "Emg6CX733PHUj9XGyQkd"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2024,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Vì Điều Gì",
+    "artist_id": [
+      "Emg6CX733PHUj9XGyQkd"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2024,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Đường Tôi Chở Em Về",
+    "artist_id": [
+      "Emg6CX733PHUj9XGyQkd"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2020,
+    "country": "Viet Nam"
+  },
+  {
+    "song_name": "Dù Cho Mai Về Sau",
+    "artist_id": [
+      "Emg6CX733PHUj9XGyQkd"
+    ],
+    "audio_url": "",
+    "duration": null,
+    "love_count": 0,
+    "play_count": 0,
+    "song_imageUrl": "",
+    "year": 2020,
+    "country": "Viet Nam"
+  }
 // Ariana Grande
-{
-  'song_name': '7 Rings',
-  'artist_id': ['h1otBb4PJMWpC6OXyLqH'],
-  'audio_url': '',
-  'duration': null,
-  'love_count': 0,
-  'play_count': 0,
-  'song_imageUrl': '',
-  'year': 2019,
-  'country': 'international',
-},
-// The Weeknd
-{
-  'song_name': 'Blinding Lights',
-  'artist_id': ['Zq498eDzQys8yxiREqtI'],
-  'audio_url': '',
-  'duration': null,
-  'love_count': 0,
-  'play_count': 0,
-  'song_imageUrl': '',
-  'year': 2020,
-  'country': 'international',
-},
-// BTS
-{
-  'song_name': 'Dynamite',
-  'artist_id': ['UoyzE7vbCFahEZZfFLXV'],
-  'audio_url': '',
-  'duration': null,
-  'love_count': 0,
-  'play_count': 0,
-  'song_imageUrl': '',
-  'year': 2020,
-  'country': 'international',
-},
-// Billie Eilish
-{
-  'song_name': 'Happier Than Ever',
-  'artist_id': ['KYY3GBNvrTsoq3Xiv3cc'],
-  'audio_url': '',
-  'duration': null,
-  'love_count': 0,
-  'play_count': 0,
-  'song_imageUrl': '',
-  'year': 2021,
-  'country': 'international',
-},
-// Ed Sheeran
-{
-  'song_name': 'Perfect',
-  'artist_id': ['72gOwzzJ1klyS63BUp1j'],
-  'audio_url': '',
-  'duration': null,
-  'love_count': 0,
-  'play_count': 0,
-  'song_imageUrl': '',
-  'year': 2017,
-  'country': 'international',
-},
-// Taylor Swift
-{
-  'song_name': 'Blank Space',
-  'artist_id': ['uVhCAxnIQW5M41PU4QbW'],
-  'audio_url': '',
-  'duration': null,
-  'love_count': 0,
-  'play_count': 0,
-  'song_imageUrl': '',
-  'year': 2014,
-  'country': 'international',
-},
-// Justin Bieber
-{
-  'song_name': 'Peaches',
-  'artist_id': ['una7m5wEfVtjrbdHZ6Um'],
-  'audio_url': '',
-  'duration': null,
-  'love_count': 0,
-  'play_count': 0,
-  'song_imageUrl': '',
-  'year': 2021,
-  'country': 'international',
-},
-// Bruno Mars
-{
-  'song_name': 'Uptown Funk',
-  'artist_id': ['NmND5KZgMg2DWu0TvcUo'],
-  'audio_url': '',
-  'duration': null,
-  'love_count': 0,
-  'play_count': 0,
-  'song_imageUrl': '',
-  'year': 2014,
-  'country': 'international',
-},
-// Adele
-{
-  'song_name': 'Hello',
-  'artist_id': ['atZWGkyhUmQsMPquc0SP'],
-  'audio_url': '',
-  'duration': null,
-  'love_count': 0,
-  'play_count': 0,
-  'song_imageUrl': '',
-  'year': 2015,
-  'country': 'international',
-},
+// {
+//   'song_name': '7 Rings',
+//   'artist_id': ['h1otBb4PJMWpC6OXyLqH'],
+//   'audio_url': '',
+//   'duration': null,
+//   'love_count': 0,
+//   'play_count': 0,
+//   'song_imageUrl': '',
+//   'year': 2019,
+//   'country': 'international',
+// },
+// // The Weeknd
+// {
+//   'song_name': 'Blinding Lights',
+//   'artist_id': ['Zq498eDzQys8yxiREqtI'],
+//   'audio_url': '',
+//   'duration': null,
+//   'love_count': 0,
+//   'play_count': 0,
+//   'song_imageUrl': '',
+//   'year': 2020,
+//   'country': 'international',
+// },
+// // BTS
+// {
+//   'song_name': 'Dynamite',
+//   'artist_id': ['UoyzE7vbCFahEZZfFLXV'],
+//   'audio_url': '',
+//   'duration': null,
+//   'love_count': 0,
+//   'play_count': 0,
+//   'song_imageUrl': '',
+//   'year': 2020,
+//   'country': 'international',
+// },
+// // Billie Eilish
+// {
+//   'song_name': 'Happier Than Ever',
+//   'artist_id': ['KYY3GBNvrTsoq3Xiv3cc'],
+//   'audio_url': '',
+//   'duration': null,
+//   'love_count': 0,
+//   'play_count': 0,
+//   'song_imageUrl': '',
+//   'year': 2021,
+//   'country': 'international',
+// },
+// // Ed Sheeran
+// {
+//   'song_name': 'Perfect',
+//   'artist_id': ['72gOwzzJ1klyS63BUp1j'],
+//   'audio_url': '',
+//   'duration': null,
+//   'love_count': 0,
+//   'play_count': 0,
+//   'song_imageUrl': '',
+//   'year': 2017,
+//   'country': 'international',
+// },
+// // Taylor Swift
+// {
+//   'song_name': 'Blank Space',
+//   'artist_id': ['uVhCAxnIQW5M41PU4QbW'],
+//   'audio_url': '',
+//   'duration': null,
+//   'love_count': 0,
+//   'play_count': 0,
+//   'song_imageUrl': '',
+//   'year': 2014,
+//   'country': 'international',
+// },
+// // Justin Bieber
+// {
+//   'song_name': 'Peaches',
+//   'artist_id': ['una7m5wEfVtjrbdHZ6Um'],
+//   'audio_url': '',
+//   'duration': null,
+//   'love_count': 0,
+//   'play_count': 0,
+//   'song_imageUrl': '',
+//   'year': 2021,
+//   'country': 'international',
+// },
+// // Bruno Mars
+// {
+//   'song_name': 'Uptown Funk',
+//   'artist_id': ['NmND5KZgMg2DWu0TvcUo'],
+//   'audio_url': '',
+//   'duration': null,
+//   'love_count': 0,
+//   'play_count': 0,
+//   'song_imageUrl': '',
+//   'year': 2014,
+//   'country': 'international',
+// },
+// // Adele
+// {
+//   'song_name': 'Hello',
+//   'artist_id': ['atZWGkyhUmQsMPquc0SP'],
+//   'audio_url': '',
+//   'duration': null,
+//   'love_count': 0,
+//   'play_count': 0,
+//   'song_imageUrl': '',
+//   'year': 2015,
+//   'country': 'international',
+// },
 
       // Đen Vâu – "Vị Nhà" (2025)
       // {
