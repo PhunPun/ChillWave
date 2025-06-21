@@ -1,7 +1,7 @@
 import 'package:chillwave/controllers/music_controller.dart';
 import 'package:chillwave/models/playlist_model.dart';
 import 'package:chillwave/models/song_model.dart';
-import 'package:chillwave/widgets/skeleton/song_card_skeleton.dart';
+import 'package:chillwave/widgets/skeleton_search/song_card_skeleton.dart';
 import 'package:chillwave/widgets/song_card.dart';
 import 'package:flutter/material.dart';
 

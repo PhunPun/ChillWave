@@ -84,10 +84,42 @@ class _MiniPlayerState extends State<MiniPlayer>
         setState(() => _position = p);
       }
     });
-
+    _updateInitialPlayerState();
+      _playerController.audioPlayer.onPlayerStateChanged.listen((state) {
+      if (mounted) {
+        setState(() {
+          isPlaying = state == PlayerState.playing;
+        });
+      }
+    }); 
     _loadArtistNames();
     _checkIfFavorite();
     _addToPlayHistory(widget.song.id); // chỉ update Firestore
+  }
+
+  @override
+    void didUpdateWidget(covariant MiniPlayer oldWidget) {
+      super.didUpdateWidget(oldWidget);
+
+      if (oldWidget.song.id != widget.song.id) {
+        _handleSongChange();
+      }
+    }
+  Future<void> _handleSongChange() async {
+    _checkIfFavorite();
+    _loadArtistNames();
+    _updateInitialPlayerState();
+    await _addToPlayHistory(widget.song.id); // cũng nên gọi lại để log đúng bài mới
+    await _initPlayedSongIds();              // cập nhật lịch sử nếu cần
+    await _playSafe(widget.song);            // để tự động phát bài mới khi cập nhật
+    MusicController().incrementPlayCount(widget.song.id); // update play count
+  }
+  void _updateInitialPlayerState() {
+    final state = _playerController.audioPlayer.state;
+
+    setState(() {
+      isPlaying = state == PlayerState.playing;
+    });
   }
 
   Future<void> _loadPlayedSongIds() async {

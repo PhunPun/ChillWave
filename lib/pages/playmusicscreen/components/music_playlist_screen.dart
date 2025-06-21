@@ -3,7 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chillwave/controllers/artist_controller.dart';
 import 'package:chillwave/controllers/music_controller.dart';
 import 'package:chillwave/pages/playmusicscreen/playmusic.dart';
-import 'package:chillwave/widgets/skeleton/song_card_skeleton.dart';
+import 'package:chillwave/widgets/skeleton_search/song_card_skeleton.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:chillwave/models/song_model.dart';

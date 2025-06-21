@@ -2,7 +2,7 @@ import 'package:chillwave/controllers/album_controller.dart';
 import 'package:chillwave/controllers/artist_controller.dart';
 import 'package:chillwave/controllers/music_controller.dart';
 import 'package:chillwave/models/song_model.dart';
-import 'package:chillwave/widgets/skeleton/song_card_skeleton.dart';
+import 'package:chillwave/widgets/skeleton_search/song_card_skeleton.dart';
 import 'package:chillwave/widgets/song_card.dart';
 import 'package:flutter/material.dart';
 import 'package:chillwave/models/artist_model.dart';

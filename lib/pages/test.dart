@@ -51,7 +51,7 @@ class _TestPageState extends State<TestPage> {
     if (recordedFilePath != null) {
       final songName = await acrController.recognizeSong(File(recordedFilePath!));
       setState(() {
-        result = songName ?? 'Không nhận diện được';
+        result = (songName != null) ? songName.toString() : 'Không nhận diện được';
       });
     } else {
       setState(() {
