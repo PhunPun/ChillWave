@@ -392,9 +392,25 @@ class _MiniPlayerState extends State<MiniPlayer>
 
   void _handleNext() async {
     _playerController.stop();
+
+    final playlist = widget.playlist;
+    if (playlist != null && playlist.isNotEmpty) {
+      final currentIndex = playlist.indexWhere((s) => s.id == widget.song.id);
+      if (currentIndex >= 0 && currentIndex < playlist.length - 1) {
+        final nextSong = playlist[currentIndex + 1];
+        final musicStateProvider = context.read<MusicStateProvider>();
+        musicStateProvider.setCurrentSong(nextSong);
+        musicStateProvider.setCurrentPlaylist(playlist);
+        await _playSafe(nextSong);
+        if (widget.onSongChanged != null) widget.onSongChanged!(nextSong);
+        setState(() {});
+        return;
+      }
+    }
+
+    // Fallback dùng playedSongIds nếu không có playlist
     await _loadPlayedSongIds();
-    print('playedSongIds (NEXT): ' + playedSongIds.toString());
-    int currentIdx = playedSongIds.lastIndexOf(widget.song.id);
+    final currentIdx = playedSongIds.lastIndexOf(widget.song.id);
     if (currentIdx < playedSongIds.length - 1) {
       final nextSongId = playedSongIds[currentIdx + 1];
       final songDoc = await FirebaseFirestore.instance.collection('songs').doc(nextSongId).get();
@@ -404,42 +420,59 @@ class _MiniPlayerState extends State<MiniPlayer>
         data['audio_url'] = musicController.convertDriveLink(data['audio_url'] ?? '');
         final nextSong = SongModel.fromMap(songDoc.id, data);
         final musicStateProvider = context.read<MusicStateProvider>();
-          musicStateProvider.setCurrentSong(nextSong);
-          musicStateProvider.setCurrentPlaylist(widget.playlist);
+        musicStateProvider.setCurrentSong(nextSong);
+        musicStateProvider.setCurrentPlaylist(widget.playlist);
         await _playSafe(nextSong);
         if (widget.onSongChanged != null) widget.onSongChanged!(nextSong);
-
         setState(() {});
+        return;
       }
-    } else {
-      // Nếu đang ở cuối queue, random bài mới
-      final snapshot = await FirebaseFirestore.instance.collection('songs').get();
-      final musicController = MusicController();
-      final allSongs = snapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        data['audio_url'] = musicController.convertDriveLink(data['audio_url'] ?? '');
-        return SongModel.fromMap(doc.id, data);
-      }).toList();
-      allSongs.removeWhere((s) => s.id == widget.song.id);
-      if (allSongs.isNotEmpty) {
-        allSongs.shuffle();
-        final nextSong = allSongs.first;
-        final musicStateProvider = context.read<MusicStateProvider>();
-          musicStateProvider.setCurrentSong(nextSong);
-          musicStateProvider.setCurrentPlaylist(widget.playlist);
-        await _playSafe(nextSong);
-        if (widget.onSongChanged != null) widget.onSongChanged!(nextSong);
+    }
 
-        setState(() {});
-      }
+    // Nếu cuối danh sách: random bài khác
+    final snapshot = await FirebaseFirestore.instance.collection('songs').get();
+    final musicController = MusicController();
+    final allSongs = snapshot.docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      data['audio_url'] = musicController.convertDriveLink(data['audio_url'] ?? '');
+      return SongModel.fromMap(doc.id, data);
+    }).toList();
+
+    allSongs.removeWhere((s) => s.id == widget.song.id);
+    if (allSongs.isNotEmpty) {
+      allSongs.shuffle();
+      final nextSong = allSongs.first;
+      final musicStateProvider = context.read<MusicStateProvider>();
+      musicStateProvider.setCurrentSong(nextSong);
+      musicStateProvider.setCurrentPlaylist(widget.playlist);
+      await _playSafe(nextSong);
+      if (widget.onSongChanged != null) widget.onSongChanged!(nextSong);
+      setState(() {});
     }
   }
 
+
   void _handlePrev() async {
     _playerController.stop();
+
+    final playlist = widget.playlist;
+    if (playlist != null && playlist.isNotEmpty) {
+      final currentIndex = playlist.indexWhere((s) => s.id == widget.song.id);
+      if (currentIndex > 0) {
+        final prevSong = playlist[currentIndex - 1];
+        final musicStateProvider = context.read<MusicStateProvider>();
+        musicStateProvider.setCurrentSong(prevSong);
+        musicStateProvider.setCurrentPlaylist(playlist);
+        await _playSafe(prevSong);
+        if (widget.onSongChanged != null) widget.onSongChanged!(prevSong);
+        setState(() {});
+        return;
+      }
+    }
+
+    // Fallback nếu không có playlist
     await _loadPlayedSongIds();
-    print('playedSongIds (PREV): ' + playedSongIds.toString());
-    int currentIdx = playedSongIds.lastIndexOf(widget.song.id);
+    final currentIdx = playedSongIds.lastIndexOf(widget.song.id);
     if (currentIdx > 0) {
       final prevSongId = playedSongIds[currentIdx - 1];
       final songDoc = await FirebaseFirestore.instance.collection('songs').doc(prevSongId).get();
@@ -449,17 +482,15 @@ class _MiniPlayerState extends State<MiniPlayer>
         data['audio_url'] = musicController.convertDriveLink(data['audio_url'] ?? '');
         final prevSong = SongModel.fromMap(songDoc.id, data);
         final musicStateProvider = context.read<MusicStateProvider>();
-          musicStateProvider.setCurrentSong(prevSong);
-          musicStateProvider.setCurrentPlaylist(widget.playlist);
+        musicStateProvider.setCurrentSong(prevSong);
+        musicStateProvider.setCurrentPlaylist(widget.playlist);
         await _playSafe(prevSong);
         if (widget.onSongChanged != null) widget.onSongChanged!(prevSong);
-
         setState(() {});
-        return;
       }
     }
-    // Nếu index = 0 thì không cho prev (không làm gì)
   }
+
 
   Future<void> _playSafe(SongModel song) async {
     // Nếu đã phát bài này rồi, không phát lại

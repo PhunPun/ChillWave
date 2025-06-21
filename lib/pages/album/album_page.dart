@@ -15,6 +15,7 @@ class AlbumPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    List<SongModel> _playlist = [];
     return Scaffold(
       appBar: AppBar(
         title: Text(album.albumName, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),),
@@ -61,8 +62,8 @@ class AlbumPage extends StatelessWidget {
                 if (song == null) {
                   return const Text('Không tìm thấy bài hát', style: TextStyle(color: Colors.white));
                 }
-
-                return SongCard(song: song);
+                _playlist.add(song);
+                return SongCard(song: song, playlist: _playlist,);
               },
             );
           },

@@ -495,8 +495,28 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
 
   void _handleNext() async {
     _playerController.stop();
+
+    final playlist = widget.playlist;
+
+    if (playlist != null && playlist.isNotEmpty) {
+      final currentIndex = playlist.indexWhere((s) => s.id == widget.song.id);
+      if (currentIndex >= 0 && currentIndex < playlist.length - 1) {
+        final nextSong = playlist[currentIndex + 1];
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MusicPlayerWithSwipeScreen(
+              song: nextSong,
+              playlist: playlist,
+            ),
+          ),
+        );
+        return;
+      }
+    }
+
+    // Nếu không có playlist hoặc đã ở cuối, fallback dùng playedSongIds
     await _loadPlayedSongIds();
-    print('playedSongIds (NEXT): ' + playedSongIds.toString());
     int currentIdx = playedSongIds.lastIndexOf(widget.song.id);
     if (currentIdx < playedSongIds.length - 1) {
       final nextSongId = playedSongIds[currentIdx + 1];
@@ -512,10 +532,9 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
             builder: (context) => MusicPlayerWithSwipeScreen(song: nextSong),
           ),
         );
-        return;
       }
     } else {
-      // Nếu đang ở cuối queue, random bài mới
+      // Random bài mới
       final snapshot = await FirebaseFirestore.instance.collection('songs').get();
       final musicController = MusicController();
       final allSongs = snapshot.docs.map((doc) {
@@ -537,10 +556,31 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
     }
   }
 
+
   void _handlePrev() async {
     _playerController.stop();
+
+    final playlist = widget.playlist;
+
+    if (playlist != null && playlist.isNotEmpty) {
+      final currentIndex = playlist.indexWhere((s) => s.id == widget.song.id);
+      if (currentIndex > 0) {
+        final prevSong = playlist[currentIndex - 1];
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MusicPlayerWithSwipeScreen(
+              song: prevSong,
+              playlist: playlist,
+            ),
+          ),
+        );
+        return;
+      }
+    }
+
+    // Nếu không có playlist hoặc đã ở đầu, fallback dùng playedSongIds
     await _loadPlayedSongIds();
-    print('playedSongIds (PREV): ' + playedSongIds.toString());
     int currentIdx = playedSongIds.lastIndexOf(widget.song.id);
     if (currentIdx > 0) {
       final prevSongId = playedSongIds[currentIdx - 1];
@@ -556,11 +596,10 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
             builder: (context) => MusicPlayerWithSwipeScreen(song: prevSong),
           ),
         );
-        return;
       }
     }
-    // Nếu index = 0 thì không cho prev (không làm gì)
   }
+
 
   Future<void> _playSafe() async {
     // ✅ Nếu bài hát hiện tại đã được load → kiểm tra trạng thái thực tế
@@ -604,14 +643,12 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
       return;
     }
 
-    setState(() {
-      isPlaying = true;
-      _rotationController.repeat();
-    });
-  }
-
-
-
+    if (!mounted) return; // ✅ Thêm dòng này trước setState
+      setState(() {
+        isPlaying = true;
+        _rotationController.repeat();
+      });
+    }
 
   void _showPlaylistDialog(BuildContext context, String songId) async {
     final playlists = await PlaylistController.getUserPlaylists();
