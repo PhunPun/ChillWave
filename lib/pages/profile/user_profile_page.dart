@@ -166,9 +166,9 @@ Widget build(BuildContext context) {
             },
           ),
           const SizedBox(height: 10),
-          PlaylistsSectionWidget(playlists: _playlists),
+          PlaylistsSectionWidget(),
           const SizedBox(height: 20),
-          FavoritesSectionWidget(favorites: _favorites),
+          FavoritesSectionWidget(userId: _user?.uid ?? ''),
         ],
       ),
     );
