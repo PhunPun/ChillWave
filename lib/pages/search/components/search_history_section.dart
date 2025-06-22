@@ -43,7 +43,7 @@ class SearchHistorySection extends StatelessWidget {
         ),
         if (controller.history.isNotEmpty)
           TextButton.icon(
-            onPressed: controller.clearHistory,
+            onPressed: () => controller.clearSearch(fromUser: true),
             icon: const Icon(Icons.delete_outline, size: 18),
             label: const Text('Xóa tất cả'),
             style: TextButton.styleFrom(
