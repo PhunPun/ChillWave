@@ -76,6 +76,10 @@ class _SearchMicroPageState extends State<SearchMicroPage>
       _wordsSpoken = result.recognizedWords;
       _confidenceLevel = result.confidence;
     });
+    // Tự động dừng khi độ tin cậy cao
+    if (_confidenceLevel >= 0.85 && _isListening) {
+      _stopListening();
+    }
   }
 
   @override
@@ -212,16 +216,6 @@ class _SearchMicroPageState extends State<SearchMicroPage>
                               ),
                               textAlign: TextAlign.center,
                             ),
-                            if (_confidenceLevel > 0) ...[
-                              const SizedBox(height: 10),
-                              Text(
-                                'Độ tin cậy: ${(_confidenceLevel * 100).toInt()}%',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
                           ],
                         ),
                       ),
