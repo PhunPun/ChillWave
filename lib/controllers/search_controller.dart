@@ -82,13 +82,7 @@ class SearchController extends ChangeNotifier {
     if (_suggestionTimer?.isActive ?? false) _suggestionTimer!.cancel();
 
     if (value.isEmpty) {
-      searchResults = [];
-      artistResults = [];
-      albumResults = [];
-      searchSuggestions = [];
-      showSuggestions = false;
-      _searchCache.clear(); // Clear cache when search is empty
-      notifyListeners();
+      clearSearch(fromUser: false);
       return;
     }
 
@@ -202,8 +196,13 @@ class SearchController extends ChangeNotifier {
   }
 
   Future<void> searchAll(String keyword) async {
-    if (keyword.isEmpty) return;
+    if (keyword.isEmpty) {
+      clearSearch();
+      return;
+    }
 
+    // Gán keyword cho currentQuery để đảm bảo nó được giữ lại
+    currentQuery = keyword;
     isLoading = true;
     notifyListeners();
 
@@ -248,7 +247,7 @@ class SearchController extends ChangeNotifier {
 
       // If no results found after successful search
       if (!hasResults && !hasError) {
-        errorMessage = 'Không tìm thấy kết quả nào cho "$keyword"';
+        // Không cần làm gì ở đây, chỉ cần giữ state
       }
     } catch (e) {
       print('Error searching: $e');
@@ -847,9 +846,11 @@ class SearchController extends ChangeNotifier {
     }
   }
 
-  void clearSearch() {
-    searchController.clear();
-    currentQuery = '';
+  void clearSearch({bool fromUser = true}) {
+    if (fromUser) {
+      searchController.clear();
+      searchFocus.requestFocus();
+    }
     searchResults = [];
     artistResults = [];
     albumResults = [];
@@ -857,12 +858,11 @@ class SearchController extends ChangeNotifier {
     showSuggestions = false;
     hasError = false;
     errorMessage = null;
-    currentFilter = SearchFilter.all;
-    currentSort = SortOption.relevance;
 
-    // Clear cache to avoid stale data
-    _searchCache.clear();
-    _suggestionCache.clear();
+    // Chỉ reset currentQuery khi người dùng xóa hết text
+    if (searchController.text.isEmpty) {
+      currentQuery = '';
+    }
 
     notifyListeners();
   }
@@ -1010,27 +1010,6 @@ class SearchController extends ChangeNotifier {
     }
   }
 
-  void clearHistory() async {
-    if (userId == null) return;
-    try {
-      final batch = FirebaseFirestore.instance.batch();
-      final query =
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(userId)
-              .collection('search_history')
-              .get();
-
-      for (var doc in query.docs) {
-        batch.delete(doc.reference);
-      }
-      await batch.commit();
-      await fetchHistory();
-    } catch (e) {
-      print('Error clearing search history: $e');
-    }
-  }
-
   void hideHistory() {
     showHistory = false;
     showSuggestions = false;
@@ -1063,8 +1042,6 @@ class SearchController extends ChangeNotifier {
 
   void retrySearch() {
     if (currentQuery.isNotEmpty) {
-      hasError = false;
-      errorMessage = null;
       searchAll(currentQuery);
     }
   }
