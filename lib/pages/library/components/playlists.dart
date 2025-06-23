@@ -44,7 +44,7 @@ class PlaylistsTap extends StatelessWidget {
 
   Widget buildPlaylistTile(BuildContext context,PlaylistModel playlist) {
     return InkWell(
-      onTap: () {
+       onTap: () {
         Navigator.push(
           context, 
           MaterialPageRoute(
