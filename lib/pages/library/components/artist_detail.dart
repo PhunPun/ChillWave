@@ -107,13 +107,25 @@ class _ArtistDetailPageState extends State<ArtistDetailPage> {
                           ),
                         ),
                         SizedBox(height: 8),
-                        Text(
-                          '${widget.artist.albums.length} album${widget.artist.albums.length > 1 ? 's' : ''}',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 16,
-                          ),
-                        ),
+                        FutureBuilder<int>(
+                          future: AlbumController.countAlbumsByArtist(widget.artist.id),
+                          builder: (context, snapshot) {
+                            final count = snapshot.data ?? 0;
+
+                            return Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (snapshot.connectionState == ConnectionState.waiting)
+                                    Text('Đang tải...', style: TextStyle(color: Color(MyColor.white), fontSize: 16),)
+                                  else
+                                    Text('$count album', style: TextStyle(color: Color(MyColor.white), fontSize: 16),),
+                                ],
+                              ),
+                            );
+                          },
+                        )
                       ],
                     ),
                   ),
