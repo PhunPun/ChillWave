@@ -1,3 +1,7 @@
+import 'package:chillwave/models/album_model.dart';
+import 'package:chillwave/models/artist_model.dart';
+import 'package:chillwave/pages/album/album_page.dart';
+import 'package:chillwave/pages/library/components/artist_detail.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -71,7 +75,14 @@ class SearchResultsSection extends StatelessWidget {
               child: SearchResultCard(
                 item: artist,
                 type: 'artist',
-                onTap: () => _viewArtist(artist),
+                onTap: (){
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ArtistDetailPage(artist: ArtistModel.fromMap(artist, artist['id']))
+                    )
+                  );
+                },
               ),
             );
           }),
@@ -111,7 +122,14 @@ class SearchResultsSection extends StatelessWidget {
               child: SearchResultCard(
                 item: album,
                 type: 'album',
-                onTap: () => _viewAlbum(album),
+                onTap: () {
+                  Navigator.push(
+                    context, 
+                    MaterialPageRoute(
+                      builder: (_) => AlbumPage(album: AlbumModel.fromMap(album, album['id']))
+                    )
+                  );
+                },
               ),
             );
           }),
@@ -188,9 +206,6 @@ class SearchResultsSection extends StatelessWidget {
     }
   }
 
-  void _viewArtist(Map<String, dynamic> artist) {
-    print('Xem nghệ sĩ: ${artist['artist_name']}');
-  }
 
   void _viewAlbum(Map<String, dynamic> album) {
     print('Xem album: ${album['album_name']}');
