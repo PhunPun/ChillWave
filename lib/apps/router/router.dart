@@ -20,7 +20,7 @@ class RouterCustum {
         path: '/',
         name: RouterName.login,
         builder: (BuildContext context, GoRouterState state) {
-          return const HomeCenter();
+          return const LoginPage();
         },
       ),
       GoRoute(
@@ -48,7 +48,7 @@ class RouterCustum {
         path: '/home',
         name: RouterName.home,
         builder: (BuildContext context, GoRouterState state) {
-          return const HomePage();
+          return const HomeCenter();
         },
       ),
       GoRoute(

@@ -80,6 +80,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       body: Stack(
         children: [
           Container(
@@ -95,7 +96,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               ),
             ),
           ),
-          
           // Back Button
           Positioned(
             top: 70,

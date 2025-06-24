@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../themes/colors/colors.dart';
 import '../../controllers/search_controller.dart' as mysearch;
@@ -102,53 +103,10 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
 
   PreferredSizeWidget _buildAppBar(mysearch.SearchController controller) {
     return AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      centerTitle: true,
-      leading:
-          controller.showHistory
-              ? IconButton(
-                icon: const Icon(Icons.arrow_back, color: Color(MyColor.se4)),
-                onPressed: controller.hideHistory,
-              )
-              : controller.hasResults || controller.currentQuery.isNotEmpty
-              ? IconButton(
-                icon: const Icon(Icons.arrow_back, color: Color(MyColor.se4)),
-                onPressed: () {
-                  controller.clearSearch();
-                  controller.searchController.clear();
-                  controller.searchFocus.unfocus();
-                  FocusScope.of(context).unfocus();
-                },
-              )
-              : Padding(
-                padding: const EdgeInsets.only(left: 12),
-                child: CircleAvatar(
-                  radius: 20,
-                  backgroundColor: const Color(MyColor.se1),
-                  child: Icon(
-                    Icons.person,
-                    color: Color(MyColor.grey),
-                    size: 24,
-                  ),
-                ),
-              ),
-      title: const Text(
-        'Tìm kiếm',
-        style: TextStyle(
-          color: Color(MyColor.se4),
-          fontWeight: FontWeight.bold,
-          fontSize: 22,
-        ),
-      ),
-      actions: [
-        if (controller.currentQuery.isNotEmpty)
-          IconButton(
-            icon: const Icon(Icons.clear, color: Color(MyColor.se4)),
-            onPressed: controller.clearSearch,
-          ),
-      ],
-      automaticallyImplyLeading: false,
+        leading: Container(),
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
+        backgroundColor: Colors.transparent,
+        toolbarHeight: 0,
     );
   }
 

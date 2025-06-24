@@ -1,4 +1,8 @@
+import 'package:chillwave/apps/router/router_name.dart';
+import 'package:chillwave/services/auth_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../themes/colors/colors.dart';
 
 class ContinueOptions extends StatelessWidget {
@@ -8,15 +12,6 @@ class ContinueOptions extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const SizedBox(height: 16),
-        _buildContinueButton(
-          imagePath: 'assets/icons/email.png',
-          text: 'Tiếp tục với email',
-          backgroundColor: const Color(MyColor.pr5),
-          onTap: () {
-            // Handle email continue option
-          },
-        ),
         const SizedBox(height: 10),
         _buildContinueButton(
           imagePath: 'assets/icons/google.png',
@@ -24,8 +19,40 @@ class ContinueOptions extends StatelessWidget {
           backgroundColor: const Color(MyColor.white),
           textColor: const Color(MyColor.black),
           borderColor: Colors.grey[300]!,
-          onTap: () {
-            // Handle Google continue option
+          onTap: () async {
+            final userCredential = await AuthService.signInWithGoogle();
+            if (!context.mounted) return;
+
+            if (userCredential != null) {
+              final user = userCredential.user!;
+              final uid = user.uid;
+
+              final favoritesRef = FirebaseFirestore.instance
+                .collection('users')
+                .doc(uid)
+                .collection('favorites')
+                .where('categories', isEqualTo: 'artists');
+              final snapshot = await favoritesRef.get();
+              if (!context.mounted) return;
+              if (snapshot.docs.isEmpty) {
+                context.goNamed(RouterName.select);
+              } else {
+                context.goNamed(RouterName.home);
+              }
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text("Đăng nhập thành công: ${user.email}"),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text("Đăng nhập thất bại hoặc bị hủy."),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
           },
         ),
       ],
