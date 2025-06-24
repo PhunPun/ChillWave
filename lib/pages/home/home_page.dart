@@ -5,6 +5,7 @@ import 'package:chillwave/widgets/new_song_list.dart';
 import 'package:chillwave/widgets/song_list.dart';
 import 'package:chillwave/widgets/top_bxh_list.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,6 +20,14 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      extendBody: true,
+      appBar: AppBar(
+        leading: Container(),
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
+        backgroundColor: Colors.transparent,
+        toolbarHeight: 0,
+      ),
       body: Container(
         padding: EdgeInsets.symmetric(horizontal: 0, vertical: 10),
         child: ListView(
