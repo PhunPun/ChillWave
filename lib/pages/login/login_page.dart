@@ -1,4 +1,7 @@
 import 'package:chillwave/apps/router/router_name.dart';
+import 'package:chillwave/controllers/user_controller.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -61,7 +64,7 @@ class _LoginPageState extends State<LoginPage> {
                       
                       // Username field
                       CustomInput(
-                        hintText: 'Tên đăng nhập',
+                        hintText: 'Email',
                         controller: _usernameController,
                       ),
                       
@@ -104,14 +107,56 @@ class _LoginPageState extends State<LoginPage> {
                       // Login button
                       CustomButton(
                         text: 'Đăng nhập',
-                        onPressed: () {
-                          if (_usernameController.text.isNotEmpty && 
-                              _passwordController.text.isNotEmpty) {
-                            context.goNamed(RouterName.profile);
-                          } else {
-                            // Show error
+                        onPressed: () async {
+                          final email = _usernameController.text.trim();
+                          final password = _passwordController.text.trim();
+
+                          if (email.isEmpty || password.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Vui lòng nhập đầy đủ thông tin')),
+                            );
+                            return;
+                          }
+
+                          try {
+                            final userCredential = await FirebaseAuth.instance
+                                .signInWithEmailAndPassword(email: email, password: password);
+                            
+                            final uid = userCredential.user?.uid;
+                            if (uid == null) throw Exception("Không tìm thấy UID");
+
+                            final userDoc = await FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(uid)
+                                .get();
+
+                            if (!context.mounted) return;
+                            final favoritesRef = FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(uid)
+                                .collection('favorites')
+                                .where('categories', isEqualTo: 'artists');
+                            final snapshot = await favoritesRef.get();
+
+                            if (snapshot.docs.isEmpty) {
+                              context.goNamed(RouterName.select); // chọn sở thích
+                            } else {
+                              context.goNamed(RouterName.home); // về trang chính
+                            }
+                          } on FirebaseAuthException catch (e) {
+                            String message = 'Đăng nhập thất bại';
+                            if (e.code == 'user-not-found') {
+                              message = 'Không tìm thấy người dùng';
+                            } else if (e.code == 'wrong-password') {
+                              message = 'Sai mật khẩu';
+                            }
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(message)),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Lỗi: ${e.toString()}')),
                             );
                           }
                         },

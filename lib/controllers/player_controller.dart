@@ -5,7 +5,18 @@ import 'package:flutter/material.dart';
 class PlayerController {
   static final PlayerController _instance = PlayerController._internal();
   factory PlayerController() => _instance;
-  ValueNotifier<SongModel?> currentSongNotifier = ValueNotifier(null);
+  PlayerController._internal() {
+    _audioPlayer.onPlayerComplete.listen((event) {
+      if (isLooping) {
+        // Đã xử lý bằng setReleaseMode.loop nên không cần làm gì ở đây
+      } else {
+        // ✅ Gọi callback để chuyển bài
+        if (onSongComplete != null) {
+          onSongComplete!();
+        }
+      }
+    });
+  }
 
   final AudioPlayer _audioPlayer = AudioPlayer();
   String? currentSongName;
@@ -14,7 +25,9 @@ class PlayerController {
   String? currentUrl;
   bool isLooping = false;
 
-  PlayerController._internal();
+  ValueNotifier<SongModel?> currentSongNotifier = ValueNotifier(null);
+
+  VoidCallback? onSongComplete; // 🎯 callback được UI gán
 
   AudioPlayer get audioPlayer => _audioPlayer;
 
@@ -33,8 +46,9 @@ class PlayerController {
       currentArtistName = artistName;
       currentImageUrl = imageUrl;
 
-      // ✅ Luôn gọi lại setSource để đảm bảo duration cập nhật
-      print("🎧 Forcing setSource with $url");
+      // Cập nhật bài hiện tại
+      currentSongNotifier.value = songModel;
+
       await _audioPlayer.setSource(UrlSource(url));
       await _audioPlayer.resume();
       return true;
@@ -44,11 +58,10 @@ class PlayerController {
     }
   }
 
-
   void pause() => _audioPlayer.pause();
   void resume() => _audioPlayer.resume();
   void stop() => _audioPlayer.stop();
-  
+
   void toggleLoop() {
     isLooping = !isLooping;
     _audioPlayer.setReleaseMode(isLooping ? ReleaseMode.loop : ReleaseMode.release);

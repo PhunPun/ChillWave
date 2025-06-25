@@ -1,4 +1,5 @@
 import 'package:chillwave/apps/router/router_name.dart';
+import 'package:chillwave/pages/login/login_page.dart';
 import 'package:chillwave/pages/register/register_email.dart';
 import 'package:chillwave/services/auth_service.dart';
 import 'package:chillwave/themes/colors/colors.dart';
@@ -148,6 +149,12 @@ class RegisterPage extends StatelessWidget {
                 'Bạn đã có tài khoản?'
               ),
               InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context, 
+                    MaterialPageRoute(builder: (_) => LoginPage())
+                  );
+                },
                 child: Text(
                   'Đăng nhập',
                   style: TextStyle(

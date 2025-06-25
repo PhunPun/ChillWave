@@ -124,6 +124,10 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
       stateProvider.setCurrentPlaylist(widget.playlist);
     });
     _similarSongsFuture = fetchSimilarSongs(widget.song);
+    final controller = PlayerController();
+    controller.onSongComplete = () {
+      _handleNext(); // Gọi logic chuyển bài tiếp theo
+    };
   }
 
 
@@ -543,6 +547,7 @@ class _MusicPlayerWithSwipeScreenState extends State<MusicPlayerWithSwipeScreen>
         return SongModel.fromMap(doc.id, data);
       }).toList();
       allSongs.removeWhere((s) => s.id == widget.song.id);
+      if (!mounted) return;
       if (allSongs.isNotEmpty) {
         allSongs.shuffle();
         final nextSong = allSongs.first;

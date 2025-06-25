@@ -1,5 +1,6 @@
 import 'package:chillwave/controllers/register_controller/register_flow_controller.dart';
 import 'package:chillwave/controllers/register_controller/username_controller.dart';
+import 'package:chillwave/pages/login/login_page.dart';
 import 'package:chillwave/themes/colors/colors.dart';
 import 'package:flutter/material.dart';
 
@@ -120,7 +121,10 @@ class _RegisterUsernameState extends State<RegisterUsername> {
                           actions: [
                             TextButton(
                               onPressed: () {
-                                //TODO: PUSH loginpage
+                                Navigator.push(
+                                  context, 
+                                  MaterialPageRoute(builder: (_) => LoginPage())
+                                );
                               },
                               child: const Text('OK', style: TextStyle(color: Color(MyColor.pr6)),),
                             ),
