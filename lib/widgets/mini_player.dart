@@ -95,6 +95,10 @@ class _MiniPlayerState extends State<MiniPlayer>
     _loadArtistNames();
     _checkIfFavorite();
     _addToPlayHistory(widget.song.id); // chỉ update Firestore
+    final controller = PlayerController();
+    controller.onSongComplete = () {
+      _handleNext(); // Gọi logic chuyển bài tiếp theo
+    };
   }
 
   @override
