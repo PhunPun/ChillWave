@@ -50,7 +50,7 @@ class _RegisterEmailState extends State<RegisterEmail> {
             Navigator.pop(context);
           },
         ),
-        title: Text('Tạo tào khoản', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),),
+        title: Text('Tạo tài khoản', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),),
       ),
       body: SafeArea(
         child: Container(
