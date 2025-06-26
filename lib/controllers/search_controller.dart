@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
+import 'package:diacritic/diacritic.dart';
 
 enum SearchFilter { all, songs, artists, albums }
 
@@ -32,6 +33,15 @@ class SearchController extends ChangeNotifier {
   // Cache cho performance
   final Map<String, List<Map<String, dynamic>>> _searchCache = {};
   final Map<String, List<String>> _suggestionCache = {};
+
+  List<Map<String, dynamic>> _allArtistsCache = [];
+  bool _isAllArtistsLoaded = false;
+
+  List<Map<String, dynamic>> _allSongsCache = [];
+  bool _isAllSongsLoaded = false;
+
+  List<Map<String, dynamic>> _allAlbumsCache = [];
+  bool _isAllAlbumsLoaded = false;
 
   SearchController() {
     _init();
@@ -195,12 +205,291 @@ class SearchController extends ChangeNotifier {
     }
   }
 
-  Future<void> searchAll(String keyword) async {
-    if (keyword.isEmpty) {
-      clearSearch();
-      return;
-    }
+  // Hàm chuẩn hóa: capitalize từng từ
+  String _capitalizeEachWord(String input) {
+    return input
+        .split(' ')
+        .map((word) {
+          if (word.isEmpty) return word;
+          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+        })
+        .join(' ');
+  }
 
+  // Lấy toàn bộ nghệ sĩ từ Firestore (cache lại)
+  Future<void> _loadAllArtists() async {
+    if (_isAllArtistsLoaded && _allArtistsCache.isNotEmpty) return;
+    try {
+      final snapshot =
+          await FirebaseFirestore.instance.collection('artists').get();
+      _allArtistsCache =
+          snapshot.docs.map((doc) {
+            final data = doc.data();
+            data['id'] = doc.id;
+            return data;
+          }).toList();
+      _isAllArtistsLoaded = true;
+    } catch (e) {
+      print('Error loading all artists: $e');
+      _allArtistsCache = [];
+      _isAllArtistsLoaded = false;
+    }
+  }
+
+  // Lọc nghệ sĩ client-side
+  List<Map<String, dynamic>> _filterArtistsClient(String keyword) {
+    String normalize(String s) =>
+        removeDiacritics(s).toLowerCase().replaceAll(' ', '');
+    final normKeyword = normalize(keyword);
+
+    // 1. Khớp chính xác
+    final exact = _allArtistsCache.where((artist) {
+      final name = artist['artist_name'] ?? '';
+      return normalize(name) == normKeyword;
+    });
+
+    // 2. Bắt đầu bằng keyword (nhưng không phải exact)
+    final startsWith = _allArtistsCache.where((artist) {
+      final name = artist['artist_name'] ?? '';
+      final normName = normalize(name);
+      return normName.startsWith(normKeyword) && normName != normKeyword;
+    });
+
+    // 3. Chỉ chứa keyword (nhưng không phải exact hay startsWith)
+    final contains = _allArtistsCache.where((artist) {
+      final name = artist['artist_name'] ?? '';
+      final normName = normalize(name);
+      return normName.contains(normKeyword) &&
+          !normName.startsWith(normKeyword) &&
+          normName != normKeyword;
+    });
+
+    // Gộp lại, ưu tiên exact > startsWith > contains
+    return [...exact, ...startsWith, ...contains].toList();
+  }
+
+  // Lấy toàn bộ bài hát từ Firestore (cache lại)
+  Future<void> _loadAllSongs() async {
+    if (_isAllSongsLoaded && _allSongsCache.isNotEmpty) return;
+    try {
+      final snapshot =
+          await FirebaseFirestore.instance.collection('songs').get();
+      _allSongsCache =
+          snapshot.docs.map((doc) {
+            final data = doc.data();
+            data['id'] = doc.id;
+            return data;
+          }).toList();
+      _isAllSongsLoaded = true;
+    } catch (e) {
+      print('Error loading all songs: $e');
+      _allSongsCache = [];
+      _isAllSongsLoaded = false;
+    }
+  }
+
+  // Lọc bài hát client-side
+  List<Map<String, dynamic>> _filterSongsClient(String keyword) {
+    String normalize(String s) =>
+        removeDiacritics(s).toLowerCase().replaceAll(' ', '');
+    final normKeyword = normalize(keyword);
+
+    // 1. Khớp chính xác
+    final exact = _allSongsCache.where((song) {
+      final name = song['song_name'] ?? '';
+      return normalize(name) == normKeyword;
+    });
+
+    // 2. Bắt đầu bằng keyword (nhưng không phải exact)
+    final startsWith = _allSongsCache.where((song) {
+      final name = song['song_name'] ?? '';
+      final normName = normalize(name);
+      return normName.startsWith(normKeyword) && normName != normKeyword;
+    });
+
+    // 3. Chỉ chứa keyword (nhưng không phải exact hay startsWith)
+    final contains = _allSongsCache.where((song) {
+      final name = song['song_name'] ?? '';
+      final normName = normalize(name);
+      return normName.contains(normKeyword) &&
+          !normName.startsWith(normKeyword) &&
+          normName != normKeyword;
+    });
+
+    // Gộp lại, ưu tiên exact > startsWith > contains
+    return [...exact, ...startsWith, ...contains].toList();
+  }
+
+  // Lấy toàn bộ album từ Firestore (cache lại)
+  Future<void> _loadAllAlbums() async {
+    if (_isAllAlbumsLoaded && _allAlbumsCache.isNotEmpty) return;
+    try {
+      final snapshot =
+          await FirebaseFirestore.instance.collection('albums').get();
+      _allAlbumsCache =
+          snapshot.docs.map((doc) {
+            final data = doc.data();
+            data['id'] = doc.id;
+            return data;
+          }).toList();
+      _isAllAlbumsLoaded = true;
+    } catch (e) {
+      print('Error loading all albums: $e');
+      _allAlbumsCache = [];
+      _isAllAlbumsLoaded = false;
+    }
+  }
+
+  // Sửa _searchArtists để tìm nghệ sĩ qua bài hát nếu không tìm thấy theo tên
+  Future<void> _searchArtists(String keyword) async {
+    await _loadAllArtists();
+    await _loadAllSongs();
+    // Ưu tiên tìm kiếm client-side
+    artistResults = _filterArtistsClient(keyword);
+    print('Client-side artist search found: \\${artistResults.length}');
+    // Nếu không tìm thấy, thử thêm các biến thể keyword
+    if (artistResults.isEmpty) {
+      // Capitalize từng từ
+      final capKeyword = _capitalizeEachWord(keyword);
+      if (capKeyword != keyword) {
+        artistResults = _filterArtistsClient(capKeyword);
+      }
+    }
+    if (artistResults.isEmpty) {
+      // Loại bỏ khoảng trắng
+      final noSpaceKeyword = keyword.replaceAll(' ', '');
+      if (noSpaceKeyword != keyword) {
+        artistResults = _filterArtistsClient(noSpaceKeyword);
+      }
+    }
+    // Nếu vẫn không có, tìm nghệ sĩ qua bài hát
+    if (artistResults.isEmpty) {
+      final matchedSongs = _filterSongsClient(keyword);
+      final Set<String> artistIds = {};
+      for (var song in matchedSongs) {
+        if (song['artist_id'] is List) {
+          artistIds.addAll(List<String>.from(song['artist_id']));
+        } else if (song['artist_id'] is String) {
+          artistIds.add(song['artist_id']);
+        }
+      }
+      artistResults =
+          _allArtistsCache
+              .where((artist) => artistIds.contains(artist['id']))
+              .toList();
+      print('Artist search via song found: \\${artistResults.length}');
+    }
+    // Nếu vẫn không có, fallback về Firestore query cũ (ít khi cần)
+    if (artistResults.isEmpty) {
+      await _searchArtistsFirestore(keyword);
+    }
+  }
+
+  // Hàm Firestore query cũ, đổi tên lại
+  Future<void> _searchArtistsFirestore(String keyword) async {
+    final searchKeyword = _formatSearchKeyword(keyword);
+    try {
+      final Set<String> addedArtistIds = <String>{};
+      artistResults = <Map<String, dynamic>>[];
+      final directQuery =
+          await FirebaseFirestore.instance
+              .collection('artists')
+              .where('artist_name', isGreaterThanOrEqualTo: searchKeyword)
+              .where(
+                'artist_name',
+                isLessThanOrEqualTo: searchKeyword + '\\uf8ff',
+              )
+              .limit(10)
+              .get();
+      for (var doc in directQuery.docs) {
+        final artistId = doc.id;
+        if (!addedArtistIds.contains(artistId)) {
+          final data = doc.data();
+          data['id'] = artistId;
+          artistResults.add(data);
+          addedArtistIds.add(artistId);
+        }
+      }
+      // ... giữ nguyên phần còn lại nếu cần ...
+    } catch (e) {
+      print('Error searching artists (firestore fallback): $e');
+      artistResults = [];
+    }
+  }
+
+  // Sửa _searchAlbums để tìm album qua bài hát nếu không tìm thấy theo tên
+  Future<void> _searchAlbums(String keyword) async {
+    await _loadAllAlbums();
+    await _loadAllSongs();
+    // Ưu tiên tìm kiếm client-side
+    albumResults = _filterAlbumsClient(keyword);
+    print('Client-side album search found: \\${albumResults.length}');
+    // Nếu không tìm thấy, thử thêm các biến thể keyword
+    if (albumResults.isEmpty) {
+      // Capitalize từng từ
+      final capKeyword = _capitalizeEachWord(keyword);
+      if (capKeyword != keyword) {
+        albumResults = _filterAlbumsClient(capKeyword);
+      }
+    }
+    if (albumResults.isEmpty) {
+      // Loại bỏ khoảng trắng
+      final noSpaceKeyword = keyword.replaceAll(' ', '');
+      if (noSpaceKeyword != keyword) {
+        albumResults = _filterAlbumsClient(noSpaceKeyword);
+      }
+    }
+    // Nếu vẫn không có, tìm album qua bài hát
+    if (albumResults.isEmpty) {
+      final matchedSongs = _filterSongsClient(keyword);
+      final Set<String> songIds =
+          matchedSongs.map((s) => s['id'] as String).toSet();
+      // Duyệt album, kiểm tra songs_id có chứa id bài hát không
+      albumResults =
+          _allAlbumsCache.where((album) {
+            final songsId = album['songs_id'];
+            if (songsId is List) {
+              return songsId.any((id) => songIds.contains(id));
+            }
+            return false;
+          }).toList();
+      print('Album search via song found: \\${albumResults.length}');
+    }
+    // Nếu vẫn không có, fallback về Firestore query cũ (ít khi cần)
+    if (albumResults.isEmpty) {
+      await _searchAlbumsFirestore(keyword);
+    }
+  }
+
+  // Lọc album client-side
+  List<Map<String, dynamic>> _filterAlbumsClient(String keyword) {
+    String normalize(String s) =>
+        removeDiacritics(s).toLowerCase().replaceAll(' ', '');
+    final normKeyword = normalize(keyword);
+    // 1. Khớp chính xác
+    final exact = _allAlbumsCache.where((album) {
+      final name = album['album_name'] ?? '';
+      return normalize(name) == normKeyword;
+    });
+    // 2. Bắt đầu bằng keyword (nhưng không phải exact)
+    final startsWith = _allAlbumsCache.where((album) {
+      final name = album['album_name'] ?? '';
+      final normName = normalize(name);
+      return normName.startsWith(normKeyword) && normName != normKeyword;
+    });
+    // 3. Chỉ chứa keyword (nhưng không phải exact hay startsWith)
+    final contains = _allAlbumsCache.where((album) {
+      final name = album['album_name'] ?? '';
+      final normName = normalize(name);
+      return normName.contains(normKeyword) &&
+          !normName.startsWith(normKeyword) &&
+          normName != normKeyword;
+    });
+    return [...exact, ...startsWith, ...contains].toList();
+  }
+
+  // Hàm tìm kiếm với 1 keyword (logic cũ của searchAll)
+  Future<void> _searchAllWithKeyword(String keyword) async {
     // Gán keyword cho currentQuery để đảm bảo nó được giữ lại
     currentQuery = keyword;
     isLoading = true;
@@ -244,11 +533,6 @@ class SearchController extends ChangeNotifier {
 
       _sortResults();
       _cacheResults(cacheKey);
-
-      // If no results found after successful search
-      if (!hasResults && !hasError) {
-        // Không cần làm gì ở đây, chỉ cần giữ state
-      }
     } catch (e) {
       print('Error searching: $e');
       hasError = true;
@@ -259,302 +543,42 @@ class SearchController extends ChangeNotifier {
     }
   }
 
-  Future<void> _searchSongs(String keyword) async {
-    final searchKeyword = _formatSearchKeyword(keyword);
-    print(
-      'Searching songs for keyword: "$keyword" -> formatted: "$searchKeyword"',
-    );
-
-    try {
-      // Search by song name first (exact match priority)
-      final songQuery =
-          await FirebaseFirestore.instance
-              .collection('songs')
-              .where('song_name', isGreaterThanOrEqualTo: searchKeyword)
-              .where('song_name', isLessThanOrEqualTo: searchKeyword + '\uf8ff')
-              .limit(20)
-              .get();
-
-      print('Firebase query returned ${songQuery.docs.length} songs');
-
-      // Use Set to track unique song IDs
-      final Set<String> addedSongIds = {};
-      searchResults = [];
-
-      // Add direct song matches first
-      for (var doc in songQuery.docs) {
-        final data = doc.data();
-        final songName = data['song_name'] as String? ?? '';
-
-        // Filter to only include songs that actually contain the search keyword
-        if (songName.toLowerCase().contains(keyword.toLowerCase())) {
-          data['id'] = doc.id;
-          if (!addedSongIds.contains(doc.id)) {
-            searchResults.add(data);
-            addedSongIds.add(doc.id);
-            print('Found song: ${data['song_name']} by direct search');
-          }
-        }
-      }
-
-      // Only search by artist name if:
-      // Current filter is 'artists' (user wants artist-related songs)
-      if (currentFilter == SearchFilter.artists) {
-        await _searchSongsByArtistName(keyword, addedSongIds);
-      }
-    } catch (e) {
-      print('Error searching songs: $e');
-      searchResults = [];
+  // Sửa searchAll để thử nhiều dạng keyword
+  Future<void> searchAll(String keyword) async {
+    if (keyword.isEmpty) {
+      clearSearch();
+      return;
     }
-  }
 
-  Future<void> _searchSongsByArtistName(
-    String keyword,
-    Set<String> addedSongIds,
-  ) async {
-    try {
-      final searchKeyword = _formatSearchKeyword(keyword);
+    // Reset kết quả trước khi thử
+    searchResults = [];
+    artistResults = [];
+    albumResults = [];
+    hasError = false;
+    errorMessage = null;
+    isLoading = true;
+    notifyListeners();
 
-      // First find artists matching the keyword
-      final artistQuery =
-          await FirebaseFirestore.instance
-              .collection('artists')
-              .where('artist_name', isGreaterThanOrEqualTo: searchKeyword)
-              .where(
-                'artist_name',
-                isLessThanOrEqualTo: searchKeyword + '\uf8ff',
-              )
-              .limit(5)
-              .get();
+    // Lần 1: Giữ nguyên keyword
+    await _searchAllWithKeyword(keyword);
+    if (hasResults) return;
 
-      final artistIds = artistQuery.docs.map((doc) => doc.id).toList();
-
-      if (artistIds.isNotEmpty) {
-        // Then find songs by these artists
-        for (String artistId in artistIds) {
-          final songQuery =
-              await FirebaseFirestore.instance
-                  .collection('songs')
-                  .where('artist_id', arrayContains: artistId)
-                  .limit(10)
-                  .get();
-
-          // Add to search results if not already present
-          for (var doc in songQuery.docs) {
-            if (!addedSongIds.contains(doc.id)) {
-              final data = doc.data();
-              data['id'] = doc.id;
-              searchResults.add(data);
-              addedSongIds.add(doc.id);
-            }
-          }
-        }
-      }
-    } catch (e) {
-      print('Error searching songs by artist name: $e');
+    // Lần 2: Capitalize từng từ
+    final capKeyword = _capitalizeEachWord(keyword);
+    if (capKeyword != keyword) {
+      await _searchAllWithKeyword(capKeyword);
+      if (hasResults) return;
     }
-  }
 
-  Future<void> _loadArtistNamesForSongs() async {
-    await _loadArtistNamesForList(searchResults);
-  }
-
-  Future<void> _loadArtistNamesForList(
-    List<Map<String, dynamic>> songList,
-  ) async {
-    try {
-      print('Loading artist names for ${songList.length} songs');
-
-      for (int i = 0; i < songList.length; i++) {
-        final song = songList[i];
-        final artistIds = song['artist_id'];
-
-        print('Song ${i}: ${song['song_name']}, artist_id: $artistIds');
-
-        if (artistIds != null && artistIds is List && artistIds.isNotEmpty) {
-          final artistId = artistIds.first.toString();
-          print('Fetching artist with ID: $artistId');
-
-          final artistDoc =
-              await FirebaseFirestore.instance
-                  .collection('artists')
-                  .doc(artistId)
-                  .get();
-
-          if (artistDoc.exists) {
-            final artistData = artistDoc.data();
-            final artistName = artistData?['artist_name'] ?? 'Unknown Artist';
-            songList[i]['artist_name'] = artistName;
-            print('Found artist: $artistName for song: ${song['song_name']}');
-          } else {
-            songList[i]['artist_name'] = 'Unknown Artist';
-            print('Artist document not found for ID: $artistId');
-          }
-        } else {
-          songList[i]['artist_name'] = 'Unknown Artist';
-          print('No artist_id found for song: ${song['song_name']}');
-        }
-      }
-
-      print('Finished loading artist names');
-    } catch (e) {
-      print('Error loading artist names: $e');
+    // Lần 3: Loại bỏ khoảng trắng
+    final noSpaceKeyword = keyword.replaceAll(' ', '');
+    if (noSpaceKeyword != keyword) {
+      await _searchAllWithKeyword(noSpaceKeyword);
+      if (hasResults) return;
     }
-  }
 
-  Future<void> _searchArtists(String keyword) async {
-    final searchKeyword = _formatSearchKeyword(keyword);
-
-    try {
-      // Use Set to track unique artist IDs to avoid duplicates
-      final Set<String> addedArtistIds = <String>{};
-      artistResults = <Map<String, dynamic>>[];
-
-      // 1. Search by artist name directly
-      final directQuery =
-          await FirebaseFirestore.instance
-              .collection('artists')
-              .where('artist_name', isGreaterThanOrEqualTo: searchKeyword)
-              .where(
-                'artist_name',
-                isLessThanOrEqualTo: searchKeyword + '\uf8ff',
-              )
-              .limit(10)
-              .get();
-
-      for (var doc in directQuery.docs) {
-        final artistId = doc.id;
-        if (!addedArtistIds.contains(artistId)) {
-          final data = doc.data();
-          data['id'] = artistId;
-          artistResults.add(data);
-          addedArtistIds.add(artistId);
-          print(
-            'Added artist from direct search: ${data['artist_name']} (${artistId})',
-          );
-        }
-      }
-
-      // 2. Only search artists through songs if we don't have enough results
-      if (artistResults.length < 5) {
-        final songQuery =
-            await FirebaseFirestore.instance
-                .collection('songs')
-                .where('song_name', isGreaterThanOrEqualTo: searchKeyword)
-                .where(
-                  'song_name',
-                  isLessThanOrEqualTo: searchKeyword + '\uf8ff',
-                )
-                .limit(10)
-                .get();
-
-        for (var songDoc in songQuery.docs) {
-          final songData = songDoc.data();
-          final artistIds = songData['artist_id'];
-          print(
-            'Processing song: ${songData['song_name']}, artist_ids: $artistIds',
-          );
-
-          if (artistIds != null && artistIds is List) {
-            for (String artistId in artistIds) {
-              print(
-                'Checking artist ID: $artistId, already added: ${addedArtistIds.contains(artistId)}',
-              );
-              // Double check to prevent duplicates
-              if (!addedArtistIds.contains(artistId)) {
-                try {
-                  final artistDoc =
-                      await FirebaseFirestore.instance
-                          .collection('artists')
-                          .doc(artistId)
-                          .get();
-
-                  if (artistDoc.exists) {
-                    final artistData = artistDoc.data()!;
-                    artistData['id'] = artistId;
-                    artistResults.add(artistData);
-                    addedArtistIds.add(artistId);
-                    print(
-                      'Added artist from song search: ${artistData['artist_name']} (${artistId})',
-                    );
-                    print('Total added IDs now: ${addedArtistIds.toList()}');
-                  }
-                } catch (e) {
-                  print('Error fetching artist $artistId: $e');
-                }
-              } else {
-                print('Skipping duplicate artist ID: $artistId');
-              }
-            }
-          }
-        }
-      }
-
-      print('Total artists found: ${artistResults.length}');
-      print('Unique artist IDs: ${addedArtistIds.length}');
-
-      // Final verification - remove any duplicates that might have slipped through
-      final uniqueResults = <String, Map<String, dynamic>>{};
-      for (final artist in artistResults) {
-        final id = artist['id'] as String;
-        uniqueResults[id] = artist;
-      }
-      artistResults = uniqueResults.values.toList();
-
-      print(
-        'Final unique artists after deduplication: ${artistResults.length}',
-      );
-    } catch (e) {
-      print('Error searching artists: $e');
-      artistResults = [];
-    }
-  }
-
-  Future<void> _searchAlbums(String keyword) async {
-    final searchKeyword = _formatSearchKeyword(keyword);
-
-    try {
-      // Search by album name first (exact match priority)
-      final albumQuery =
-          await FirebaseFirestore.instance
-              .collection('albums')
-              .where('album_name', isGreaterThanOrEqualTo: searchKeyword)
-              .where(
-                'album_name',
-                isLessThanOrEqualTo: searchKeyword + '\uf8ff',
-              )
-              .limit(10)
-              .get();
-
-      // Use Set to track unique album IDs
-      final Set<String> addedAlbumIds = {};
-      albumResults = [];
-
-      // Add direct album matches first
-      for (var doc in albumQuery.docs) {
-        final data = doc.data();
-        data['id'] = doc.id;
-        if (!addedAlbumIds.contains(doc.id)) {
-          albumResults.add(data);
-          addedAlbumIds.add(doc.id);
-        }
-      }
-
-      // Only search by artist name if:
-      // 1. Current filter is 'artists' or 'all'
-      // 2. We have few direct album results (less than 2)
-      if (currentFilter == SearchFilter.all ||
-          currentFilter == SearchFilter.artists ||
-          albumResults.length < 2) {
-        await _searchAlbumsByArtistName(keyword, addedAlbumIds);
-      }
-
-      // Load artist names for albums
-      await _loadArtistNamesForAlbums();
-    } catch (e) {
-      print('Error searching albums: $e');
-      albumResults = [];
-    }
+    // Nếu vẫn không có kết quả, giữ nguyên trạng thái (hasResults = false)
+    notifyListeners();
   }
 
   Future<void> _searchAlbumsByArtistName(
@@ -604,30 +628,97 @@ class SearchController extends ChangeNotifier {
     }
   }
 
-  Future<void> _loadArtistNamesForAlbums() async {
+  Future<void> _loadArtistNamesForSongs() async {
+    await _loadArtistNamesForList(searchResults);
+  }
+
+  Future<void> _loadArtistNamesForList(
+    List<Map<String, dynamic>> songList,
+  ) async {
     try {
-      for (int i = 0; i < albumResults.length; i++) {
-        final album = albumResults[i];
-        final artistIds = album['artist_id'];
+      print('Loading artist names for \\${songList.length} songs');
 
-        if (artistIds != null && artistIds is List && artistIds.isNotEmpty) {
-          final artistId = artistIds.first.toString();
+      for (int i = 0; i < songList.length; i++) {
+        final song = songList[i];
+        final artistIds = song['artist_id'];
 
+        print('Song \\${i}: \\${song['song_name']}, artist_id: \\${artistIds}');
+
+        List<String> ids = [];
+        if (artistIds != null) {
+          if (artistIds is List) {
+            ids = artistIds.map((e) => e.toString().trim()).toList();
+          } else if (artistIds is String) {
+            ids = [artistIds.trim()];
+          }
+        }
+        if (ids.isNotEmpty) {
+          final artistId = ids.first;
           final artistDoc =
               await FirebaseFirestore.instance
                   .collection('artists')
                   .doc(artistId)
                   .get();
+          if (artistDoc.exists) {
+            final artistData = artistDoc.data();
+            final artistName =
+                artistData?['artist_name']?.toString().trim() ?? '';
+            songList[i]['artist_name'] = artistName;
+            print(
+              'Found artist: \\${artistName} for song: \\${song['song_name']}',
+            );
+          } else {
+            songList[i]['artist_name'] = '';
+            print('Artist document not found for ID: \\${artistId}');
+          }
+        } else {
+          songList[i]['artist_name'] = '';
+          print('No artist_id found for song: \\${song['song_name']}');
+        }
+      }
 
+      print('Finished loading artist names');
+    } catch (e) {
+      print('Error loading artist names: \\${e}');
+    }
+  }
+
+  Future<void> _loadArtistNamesForAlbums() async {
+    try {
+      for (int i = 0; i < albumResults.length; i++) {
+        final album = albumResults[i];
+        final artistIds = album['artist_id'];
+        String? artistId;
+        if (artistIds != null) {
+          if (artistIds is List && artistIds.isNotEmpty) {
+            artistId = artistIds.first.toString().trim();
+          } else if (artistIds is String) {
+            artistId = artistIds.trim();
+          }
+        }
+        if (artistId != null && artistId.isNotEmpty) {
+          print('Album ${album['album_name']} - artistId: $artistId');
+          final artistDoc =
+              await FirebaseFirestore.instance
+                  .collection('artists')
+                  .doc(artistId)
+                  .get();
           if (artistDoc.exists) {
             final artistData = artistDoc.data();
             albumResults[i]['artist_name'] =
-                artistData?['artist_name'] ?? 'Unknown Artist';
+                artistData?['artist_name']?.toString().trim() ?? '';
+            print(
+              'Found artist for album: ${album['album_name']} - ${albumResults[i]['artist_name']}',
+            );
           } else {
-            albumResults[i]['artist_name'] = 'Unknown Artist';
+            albumResults[i]['artist_name'] = '';
+            print(
+              'Artist document not found for album: ${album['album_name']} - id: $artistId',
+            );
           }
         } else {
-          albumResults[i]['artist_name'] = 'Unknown Artist';
+          albumResults[i]['artist_name'] = '';
+          print('No valid artist_id for album: ${album['album_name']}');
         }
       }
     } catch (e) {
@@ -1053,5 +1144,92 @@ class SearchController extends ChangeNotifier {
     searchController.dispose();
     searchFocus.dispose();
     super.dispose();
+  }
+
+  // Hàm Firestore query cũ cho album (fallback)
+  Future<void> _searchAlbumsFirestore(String keyword) async {
+    final searchKeyword = _formatSearchKeyword(keyword);
+    try {
+      final albumQuery =
+          await FirebaseFirestore.instance
+              .collection('albums')
+              .where('album_name', isGreaterThanOrEqualTo: searchKeyword)
+              .where(
+                'album_name',
+                isLessThanOrEqualTo: searchKeyword + '\\uf8ff',
+              )
+              .limit(10)
+              .get();
+      final Set<String> addedAlbumIds = {};
+      albumResults = [];
+      for (var doc in albumQuery.docs) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        if (!addedAlbumIds.contains(doc.id)) {
+          albumResults.add(data);
+          addedAlbumIds.add(doc.id);
+        }
+      }
+    } catch (e) {
+      print('Error searching albums (firestore fallback): $e');
+      albumResults = [];
+    }
+  }
+
+  Future<void> _searchSongs(String keyword) async {
+    await _loadAllSongs();
+    // Ưu tiên tìm kiếm client-side
+    searchResults = _filterSongsClient(keyword);
+    print('Client-side song search found: \\${searchResults.length}');
+    // Nếu không tìm thấy, thử thêm các biến thể keyword
+    if (searchResults.isEmpty) {
+      // Capitalize từng từ
+      final capKeyword = _capitalizeEachWord(keyword);
+      if (capKeyword != keyword) {
+        searchResults = _filterSongsClient(capKeyword);
+      }
+    }
+    if (searchResults.isEmpty) {
+      // Loại bỏ khoảng trắng
+      final noSpaceKeyword = keyword.replaceAll(' ', '');
+      if (noSpaceKeyword != keyword) {
+        searchResults = _filterSongsClient(noSpaceKeyword);
+      }
+    }
+    print('Final client-side song search: \\${searchResults.length}');
+    // Nếu vẫn không có, fallback về Firestore query cũ (ít khi cần)
+    if (searchResults.isEmpty) {
+      await _searchSongsFirestore(keyword);
+    }
+  }
+
+  // Hàm Firestore query cũ cho song (fallback)
+  Future<void> _searchSongsFirestore(String keyword) async {
+    final searchKeyword = _formatSearchKeyword(keyword);
+    try {
+      final songQuery =
+          await FirebaseFirestore.instance
+              .collection('songs')
+              .where('song_name', isGreaterThanOrEqualTo: searchKeyword)
+              .where(
+                'song_name',
+                isLessThanOrEqualTo: searchKeyword + '\\uf8ff',
+              )
+              .limit(10)
+              .get();
+      final Set<String> addedSongIds = {};
+      searchResults = [];
+      for (var doc in songQuery.docs) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        if (!addedSongIds.contains(doc.id)) {
+          searchResults.add(data);
+          addedSongIds.add(doc.id);
+        }
+      }
+    } catch (e) {
+      print('Error searching songs (firestore fallback): $e');
+      searchResults = [];
+    }
   }
 }

@@ -376,18 +376,18 @@ class _MiniPlayerState extends State<MiniPlayer>
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   // Yêu thích
-                  InkWell(
-                    onTap: () async {
-                      final controller = MusicController();
-                      await controller.toggleFavoriteSong(widget.song);
-                      _checkIfFavorite();
-                    },
-                    child: Icon(
-                      isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
+                  // InkWell(
+                  //   onTap: () async {
+                  //     final controller = MusicController();
+                  //     await controller.toggleFavoriteSong(widget.song);
+                  //     _checkIfFavorite();
+                  //   },
+                  //   child: Icon(
+                  //     isFavorite ? Icons.favorite : Icons.favorite_border,
+                  //     color: Colors.white,
+                  //     size: 20,
+                  //   ),
+                  // ),
 
                   // Bài trước
                   InkWell(

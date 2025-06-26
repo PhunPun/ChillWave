@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../themes/colors/colors.dart';
 import '../controllers/search_controller.dart' as mysearch;
+import 'package:chillwave/controllers/artist_controller.dart';
 
 // Re-export enums from controller
 typedef SearchFilter = mysearch.SearchFilter;
@@ -470,7 +471,6 @@ class SearchResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -508,15 +508,40 @@ class SearchResultCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      _getSubtitle(),
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(MyColor.grey),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    type == 'album'
+                        ? FutureBuilder<String>(
+                          future: ArtistController.getArtistNameById(
+                            item['artist_id'] ?? '',
+                          ),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData)
+                              return const Text(
+                                "Đang tải nghệ sĩ...",
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Color(MyColor.grey),
+                                ),
+                              );
+                            return Text(
+                              snapshot.data ?? '',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(MyColor.grey),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            );
+                          },
+                        )
+                        : Text(
+                          _getSubtitle(),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Color(MyColor.grey),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                   ],
                 ),
               ),
@@ -587,12 +612,14 @@ class SearchResultCard extends StatelessWidget {
   String _getSubtitle() {
     switch (type) {
       case 'song':
-        return item['artist_name'] ?? 'Unknown Artist';
+        final name = item['artist_name'];
+        return (name != null && name.toString().trim().isNotEmpty) ? name : '';
       case 'artist':
         final followerCount = item['follower_count'] ?? 0;
         return '$followerCount người theo dõi';
       case 'album':
-        return item['artist_name'] ?? 'Unknown Artist';
+        final name = item['artist_name'];
+        return (name != null && name.toString().trim().isNotEmpty) ? name : '';
       default:
         return '';
     }
