@@ -1,4 +1,4 @@
-package com.example.chillwave
+package com.phunpun.chillwave
 
 import io.flutter.embedding.android.FlutterActivity
 
